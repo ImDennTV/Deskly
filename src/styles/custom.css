@@ -1,0 +1,120 @@
+/* Personalizzazione: ogni opzione delle impostazioni diventa un attributo su <html> (data-*), applicato da theme.js. */
+
+/* ---------- Caratteri ---------- */
+html[data-font="system"] { --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+html[data-font="mono"] { --font: var(--mono); }
+html[data-hfont="sans"] { --serif: var(--font); }
+html[data-hfont="sans"] .hero h1 { font-weight: 560; letter-spacing: -0.035em; }
+html[data-hfont="sans"] .hero h1 em { font-style: normal; }
+
+/* ---------- Sfondo ---------- */
+html[data-bg="plain"] body::before { display: none; }
+html[data-bg="gradient"] body::before,
+html[data-bg="image"] body::before { inset: 0; animation: none; will-change: auto; }
+html[data-bg="gradient"] body::before {
+  background:
+    radial-gradient(70% 60% at 100% 0%, color-mix(in srgb, var(--aurora-b) 20%, transparent), transparent 70%),
+    linear-gradient(150deg, color-mix(in srgb, var(--accent) 26%, var(--bg)) 0%, var(--bg) 52%, color-mix(in srgb, var(--aurora-c) 20%, var(--bg)) 100%);
+}
+html[data-bg="image"] { --dim: 0.35; }
+html[data-dim="none"] { --dim: 0; }
+html[data-dim="strong"] { --dim: 0.65; }
+html[data-bg="image"] body::before {
+  background:
+    linear-gradient(color-mix(in srgb, var(--bg) calc(var(--dim) * 100%), transparent), color-mix(in srgb, var(--bg) calc(var(--dim) * 100%), transparent)),
+    var(--bg-image, none) center / cover no-repeat;
+}
+html[data-bg="image"][data-bgblur] body::before { inset: -24px; filter: blur(14px); }
+html[data-grain="off"] body::after { display: none; }
+html[data-aurora="low"] { --aurora-k: 0.5; }
+html[data-aurora="high"] { --aurora-k: 1.9; }
+
+/* ---------- Pagina ---------- */
+html[data-width="narrow"] [data-mode="newtab"] { --wrap: clamp(760px, 60vw, 1180px); }
+html[data-width="wide"] [data-mode="newtab"] { --wrap: clamp(1100px, 94vw, 2000px); }
+html[data-tile="small"] [data-mode="newtab"] { --tile: clamp(74px, 5.2vw, 116px); --ico: clamp(46px, 3.5vw, 78px); }
+html[data-tile="large"] [data-mode="newtab"] { --tile: clamp(106px, 7.6vw, 164px); --ico: clamp(70px, 5.3vw, 114px); }
+
+html[data-card="outline"] [data-mode="newtab"] .folder { background: transparent; border-color: var(--line-strong); box-shadow: none; }
+html[data-card="outline"] [data-mode="newtab"] .folder:hover { background: color-mix(in srgb, var(--fc) 5%, transparent); border-color: color-mix(in srgb, var(--fc) 55%, var(--line-strong)); box-shadow: none; }
+html[data-card="tinted"] [data-mode="newtab"] .folder { background: linear-gradient(180deg, color-mix(in srgb, var(--fc) 15%, var(--surface)), color-mix(in srgb, var(--fc) 6%, var(--surface))); border-color: color-mix(in srgb, var(--fc) 24%, var(--line)); }
+html[data-card="tinted"] [data-mode="newtab"] .folder:hover { border-color: color-mix(in srgb, var(--fc) 55%, var(--line-strong)); }
+
+/* ---------- Effetti spenti ---------- */
+html[data-fx="off"] body::before { animation: none; }
+html[data-fx="off"] [data-mode="newtab"] .folder, html[data-fx="off"] [data-mode="newtab"] .folder:hover { --spot: 0; }
+html[data-fx="off"] .hero .search::before, html[data-fx="off"] .hero .search::after { display: none; }
+html[data-fx="off"] .brand::after { display: none; }
+
+/* ---------- Riquadro con logo e nome ---------- */
+.brand {
+  position: relative; isolation: isolate; overflow: hidden; gap: 14px; padding: 7px 20px 7px 7px;
+  border-radius: calc(var(--r-xl) + 2px);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 10%, var(--surface)), var(--surface));
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line-strong));
+  box-shadow: var(--shadow-tile), 0 12px 40px -18px var(--accent-glow);
+  font-size: clamp(18px, 1.3vw, 24px); font-weight: 650; letter-spacing: -0.025em; line-height: 1;
+  transition: border-color var(--t) var(--ease), box-shadow 240ms var(--ease), transform 240ms var(--ease);
+}
+.brand::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: linear-gradient(105deg, transparent 35%, color-mix(in srgb, var(--text) 14%, transparent) 50%, transparent 65%);
+  transform: translateX(-120%); transition: transform 900ms var(--ease);
+}
+.brand:hover { border-color: color-mix(in srgb, var(--accent) 55%, var(--line-strong)); transform: translateY(-1px); box-shadow: var(--shadow-tile), 0 16px 48px -16px var(--accent-glow); }
+.brand:hover::after { transform: translateX(120%); }
+.brand__mark {
+  display: grid; place-items: center; flex: none; width: clamp(40px, 2.9vw, 52px); aspect-ratio: 1;
+  border-radius: calc(var(--r-lg) + 1px);
+  background: linear-gradient(145deg, color-mix(in srgb, var(--accent) 92%, #fff), color-mix(in srgb, var(--accent) 62%, var(--aurora-c)));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.38), inset 0 -8px 16px -10px rgb(0 0 0 / 0.35), 0 8px 22px -8px var(--accent-glow);
+}
+.brand__mark .logo { width: 58%; height: 58%; }
+.brand__mark .logo rect { fill: var(--accent-ink); }
+.brand__text { display: grid; gap: 5px; min-width: 0; }
+.brand__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 24ch; }
+.brand__tag { font: 500 clamp(9px, 0.62vw, 11px)/1 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3); }
+[data-mode="newtab"] .nt-top { padding-top: 18px; }
+@media (max-width: 560px) { .brand__tag { display: none; } .brand { padding-right: 14px; } }
+
+/* ---------- Suggeriti per te ---------- */
+.suggs { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.sugg { display: inline-flex; align-items: stretch; border-radius: 99px; background: var(--surface); border: 1px dashed var(--line-strong); overflow: hidden; transition: border-color var(--t) var(--ease), background var(--t) var(--ease); }
+.sugg:hover { border-color: var(--accent-line); background: var(--surface-2); }
+.sugg__add { display: inline-flex; align-items: center; gap: 8px; padding: 7px 8px 7px 10px; font: inherit; color: var(--text); background: none; border: 0; cursor: pointer; min-width: 0; }
+.sugg__add img { width: 18px; height: 18px; border-radius: 5px; }
+.sugg__add .plus { color: var(--accent); }
+.sugg__x { display: grid; place-items: center; width: 28px; color: var(--text-3); background: none; border: 0; cursor: pointer; }
+.sugg__x:hover { color: var(--text); background: var(--surface-3, var(--surface-2)); }
+.suggs__all { margin-left: 4px; }
+
+/* ---------- Importazione guidata ---------- */
+.imp { display: grid; gap: 14px; }
+.imp__hint, .imp__loading { margin: 0; }
+.imp__group { display: grid; gap: 2px; border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--surface); padding: 6px; }
+.imp__head { display: flex; align-items: center; gap: 10px; padding: 6px 8px; cursor: pointer; }
+.imp__head strong { font-weight: 600; }
+.imp__rows { display: grid; }
+.imp__row { display: grid; grid-template-columns: auto 18px minmax(0, 1fr) minmax(0, 0.7fr); align-items: center; gap: 10px; padding: 7px 8px; border-radius: var(--r-md); cursor: pointer; }
+.imp__row:hover { background: var(--surface-2); }
+.imp__fav { border-radius: 5px; }
+.imp__host { color: var(--text-3); font: 400 12px/1 var(--mono); text-align: right; }
+.imp__box { width: 16px; height: 16px; margin: 0; accent-color: var(--accent); cursor: pointer; }
+.imp__count { color: var(--text-3); font-size: 12px; }
+@media (max-width: 560px) { .imp__row { grid-template-columns: auto 18px minmax(0, 1fr); } .imp__host { display: none; } }
+
+/* ---------- Impostazioni a schede ---------- */
+.settabs { display: flex; gap: 4px; padding: 3px; margin: 0 0 16px; border-radius: var(--r-lg); background: var(--field); border: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
+.settabs button { flex: 1 0 auto; padding: 7px 12px; border: 0; border-radius: calc(var(--r-lg) - 3px); background: none; color: var(--text-2); font: 500 13px/1 var(--font); cursor: pointer; white-space: nowrap; }
+.settabs button:hover { color: var(--text); }
+.settabs button[aria-selected="true"] { background: var(--surface-2); color: var(--text); box-shadow: 0 1px 2px rgb(0 0 0 / 0.25), inset 0 0 0 1px var(--line); }
+.bgpick { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.bgpick .btn { white-space: nowrap; }
+.setpreview { height: 76px; border-radius: var(--r-lg); border: 1px solid var(--line); background: var(--bg) center / cover; position: relative; overflow: hidden; }
+
+/* ---------- Dettagli ---------- */
+.nt-top__actions { margin-left: auto; }
+.settings { min-height: 420px; align-content: start; }
+.settings .setrow { flex-wrap: wrap; }
+.settings .seg { max-width: 100%; }
+.empty__actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }

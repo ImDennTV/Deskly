@@ -1,0 +1,205 @@
+@font-face {
+  font-family: "Geist";
+  src: url("../../assets/fonts/geist-latin-wght-normal.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Geist";
+  src: url("../../assets/fonts/geist-latin-ext-wght-normal.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Geist Mono";
+  src: url("../../assets/fonts/geist-mono-latin-wght-normal.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Instrument Serif";
+  src: url("../../assets/fonts/instrument-serif-latin-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Instrument Serif";
+  src: url("../../assets/fonts/instrument-serif-latin-400-italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+/*
+  Deskly: superfici piene e leggere, bordi sottili, un solo colore d'accento.
+  Le scale di grigio vengono da Radix Colors (slate, mauve, sand, violet) e sono pensate
+  per avere sempre contrasto leggibile. Il vetro resta solo su barra, menu e finestre.
+  Ink è il default; ogni tema ridefinisce solo i token.
+*/
+:root {
+  --font: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --serif: "Instrument Serif", ui-serif, "Iowan Old Style", Georgia, serif;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --spring: cubic-bezier(0.34, 1.4, 0.5, 1);
+  --t: 140ms;
+  color-scheme: dark;
+
+  --accent: #8b7cf6;
+  --accent-ink: #ffffff;
+  --accent-soft: color-mix(in srgb, var(--accent) 18%, transparent);
+  --accent-line: color-mix(in srgb, var(--accent) 55%, transparent);
+  --accent-glow: color-mix(in srgb, var(--accent) 38%, transparent);
+  --danger: #ff6369;
+  --ok: #3dd68c;
+  --warn: #ffc53d;
+
+  /* Alone colorato dietro la pagina. --aurora-o è l'intensità. */
+  --bg: #111113;
+  --aurora-a: var(--accent);
+  --aurora-b: #3e63dd;
+  --aurora-c: #d6409f;
+  --aurora-o: 16%;
+  --grain: 0.035;
+
+  /* Superfici piene */
+  --surface: #18191b;
+  --surface-2: #212225;
+  --surface-3: #272a2d;
+  --pop: rgb(27 28 31 / 0.96);
+  --line: #2a2c30;
+  --line-strong: #3b3f45;
+  --edge: #33363b;
+  --glass: linear-gradient(180deg, var(--surface-2), var(--surface));
+  --blur: blur(16px) saturate(140%);
+  --blur-lg: blur(28px) saturate(150%);
+
+  --field: #151618;
+  --text: #edeef0;
+  --text-2: #b0b4ba;
+  --text-3: #868b94;
+  --tone: #fff;
+  --fav-bg: rgb(255 255 255 / 0.94);
+
+  --shadow-glass: 0 1px 2px rgb(0 0 0 / 0.3), 0 12px 28px -18px rgb(0 0 0 / 0.6);
+  --shadow-tile: 0 1px 2px rgb(0 0 0 / 0.35), 0 6px 14px -8px rgb(0 0 0 / 0.55);
+  --shadow-pop: 0 24px 60px -12px rgb(0 0 0 / 0.7), 0 0 0 1px rgb(255 255 255 / 0.04);
+  --scrim: rgb(5 5 8 / 0.6);
+  --hi: inset 0 1px 0 rgb(255 255 255 / 0.04);
+
+  --r-sm: 8px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 20px;
+  --row-h: 40px;
+  --gap: 8px;
+  --pad: 16px;
+}
+
+/* Carbon: nero caldo (mauve), quasi nessun colore oltre all'accento */
+:root[data-theme="carbon"] {
+  --bg: #0c0c0d;
+  --aurora-a: var(--accent);
+  --aurora-b: #6f6d78;
+  --aurora-c: #49474e;
+  --aurora-o: 7%;
+  --grain: 0.03;
+  --surface: #161517;
+  --surface-2: #201f22;
+  --surface-3: #2a282c;
+  --pop: rgb(24 23 26 / 0.96);
+  --line: #28262a;
+  --line-strong: #3c393f;
+  --edge: #323035;
+  --field: #121113;
+  --text: #eeeef0;
+  --text-2: #b5b2bc;
+  --text-3: #8a8793;
+  --scrim: rgb(0 0 0 / 0.66);
+}
+
+/* Paper: carta calda (sand) con schede bianche */
+:root[data-theme="paper"] {
+  color-scheme: light;
+  --bg: #f6f5f3;
+  --aurora-a: var(--accent);
+  --aurora-b: #3e9bff;
+  --aurora-c: #f76b8a;
+  --aurora-o: 10%;
+  --grain: 0.025;
+  --surface: #fdfdfc;
+  --surface-2: #f1f0ef;
+  --surface-3: #e9e8e6;
+  --pop: rgb(255 255 255 / 0.97);
+  --line: #e2e1de;
+  --line-strong: #cfceca;
+  --edge: #ffffff;
+  --glass: linear-gradient(180deg, #ffffff, #fcfcfb);
+  --field: #ffffff;
+  --text: #21201c;
+  --text-2: #5b5a55;
+  --text-3: #75746f;
+  --tone: #000;
+  --fav-bg: #ffffff;
+  --danger: #d12d3a;
+  --ok: #1a8a4f;
+  --warn: #a96a00;
+  --shadow-glass: 0 1px 2px rgb(33 32 28 / 0.06), 0 10px 24px -16px rgb(33 32 28 / 0.18);
+  --shadow-tile: 0 1px 2px rgb(33 32 28 / 0.08), 0 6px 14px -8px rgb(33 32 28 / 0.2);
+  --shadow-pop: 0 24px 56px -14px rgb(33 32 28 / 0.28), 0 0 0 1px rgb(33 32 28 / 0.06);
+  --scrim: rgb(33 32 28 / 0.32);
+  --hi: inset 0 1px 0 rgb(255 255 255 / 0.9);
+}
+
+/* Ember: antracite caldo (sand) con luce ambrata */
+:root[data-theme="ember"] {
+  --bg: #111110;
+  --aurora-a: #e8590c;
+  --aurora-b: #f5a524;
+  --aurora-c: #e5484d;
+  --aurora-o: 15%;
+  --surface: #191918;
+  --surface-2: #222221;
+  --surface-3: #2a2a28;
+  --pop: rgb(28 28 26 / 0.96);
+  --line: #2c2c2a;
+  --line-strong: #43423e;
+  --edge: #353532;
+  --field: #151514;
+  --text: #eeeeec;
+  --text-2: #b5b3ad;
+  --text-3: #8c8a83;
+  --scrim: rgb(6 6 4 / 0.62);
+}
+
+/* Violet: viola profondo, luce viola e blu */
+:root[data-theme="violet"] {
+  --bg: #14121f;
+  --aurora-a: #6e56cf;
+  --aurora-b: #3e63dd;
+  --aurora-c: #d6409f;
+  --aurora-o: 26%;
+  --surface: #1b1730;
+  --surface-2: #251f40;
+  --surface-3: #2f2751;
+  --pop: rgb(31 26 54 / 0.96);
+  --line: #2f2752;
+  --line-strong: #473876;
+  --edge: #3a2e66;
+  --field: #171329;
+  --text: #efecfd;
+  --text-2: #b9b0e6;
+  --text-3: #8f85bd;
+  --scrim: rgb(10 6 26 / 0.64);
+}
+
+/* Angoli */
+:root[data-radius="sharp"] { --r-sm: 4px; --r-md: 6px; --r-lg: 8px; --r-xl: 12px; }
+:root[data-radius="round"] { --r-sm: 12px; --r-md: 16px; --r-lg: 24px; --r-xl: 34px; }
+
+/* Densità */
+:root[data-density="compact"] { --row-h: 32px; --gap: 4px; --pad: 12px; }
+:root[data-density="roomy"] { --row-h: 50px; --gap: 12px; --pad: 20px; }

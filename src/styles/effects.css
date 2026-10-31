@@ -1,0 +1,73 @@
+/* Effetti: pochi, lenti e coerenti con il colore di ogni cartella. Solo nuova scheda; tutto si spegne con reduced-motion. */
+
+@property --spot { syntax: "<number>"; inherits: false; initial-value: 0; }
+@property --ang { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+
+/* ---------- Spotlight sulle cartelle ----------
+   Un riflesso del colore della cartella segue il mouse dentro il pannello e accende il bordo vicino al cursore.
+   Il bordo diventa un secondo livello di sfondo (border-box) così non servono pseudo-elementi: ::before/::after
+   restano liberi per gli indicatori di trascinamento. */
+[data-mode="newtab"] .folder {
+  --ring: var(--line);
+  --mx: 50%; --my: 0%;
+  border-color: transparent;
+  background:
+    radial-gradient(360px circle at var(--mx) var(--my), color-mix(in srgb, var(--fc) calc(var(--spot) * 14%), transparent), transparent 72%) padding-box,
+    linear-gradient(180deg, color-mix(in srgb, var(--fc) 7%, var(--surface)), var(--surface) 140px) padding-box,
+    radial-gradient(240px circle at var(--mx) var(--my), color-mix(in srgb, var(--fc) calc(var(--spot) * 90%), transparent), transparent 72%) border-box,
+    linear-gradient(var(--ring), var(--ring)) border-box;
+  background-origin: border-box;
+  transition: --spot 380ms var(--ease), box-shadow 240ms var(--ease);
+}
+[data-mode="newtab"] .folder:hover {
+  --spot: 1;
+  --ring: color-mix(in srgb, var(--fc) 22%, var(--line-strong));
+  border-color: transparent;
+}
+
+/* ---------- Ricerca: anello luminoso in rotazione ----------
+   Si accende solo quando scrivi. Due livelli: l'anello nitido e un alone sfocato dello stesso gradiente. */
+.hero .search { isolation: isolate; }
+.hero .search::before, .hero .search::after {
+  content: ""; position: absolute; z-index: -1; pointer-events: none; opacity: 0;
+  border-radius: calc(var(--r-xl) + 2px);
+  background: conic-gradient(from var(--ang), var(--accent), var(--aurora-b), var(--aurora-c), var(--accent));
+  transition: opacity 360ms var(--ease);
+}
+.hero .search::before { inset: -2px; }
+.hero .search::after { inset: -2px; filter: blur(18px); }
+.hero .search:focus-within::before { opacity: 1; animation: ring-spin 7s linear infinite; }
+.hero .search:focus-within::after { opacity: 0.32; animation: ring-spin 7s linear infinite; }
+.hero .search input:focus { border-color: transparent; box-shadow: none; }
+@keyframes ring-spin { to { --ang: 360deg; } }
+
+/* ---------- Il nome nel saluto ---------- */
+.hero h1 em {
+  background: linear-gradient(100deg, color-mix(in srgb, var(--accent) 78%, var(--text)), color-mix(in srgb, var(--aurora-b) 70%, var(--text)) 45%, color-mix(in srgb, var(--aurora-c) 70%, var(--text)) 70%, color-mix(in srgb, var(--accent) 78%, var(--text)));
+  background-size: 240% 100%;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: name-drift 14s ease-in-out infinite alternate;
+}
+@keyframes name-drift { from { background-position: 0% 50%; } to { background-position: 100% 50%; } }
+
+/* ---------- Ingresso a cascata (solo al primo caricamento) ---------- */
+@keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+.is-intro .nt-top, .is-intro .hero__when, .is-intro .hero h1, .is-intro .hero .search, .is-intro .hero .sub,
+.is-intro .section__title, .is-intro .chips, .is-intro .folder {
+  animation: rise 720ms var(--ease) backwards;
+}
+.is-intro .hero__when { animation-delay: 40ms; }
+.is-intro .hero h1 { animation-delay: 110ms; }
+.is-intro .hero .search { animation-delay: 190ms; }
+.is-intro .hero .sub { animation-delay: 240ms; }
+.is-intro .section__title, .is-intro .chips { animation-delay: 300ms; }
+.is-intro .folder { animation-delay: calc(340ms + var(--i, 0) * 70ms); }
+
+@media (prefers-reduced-motion: reduce), (hover: none) {
+  [data-mode="newtab"] .folder { --spot: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero .search::before, .hero .search::after, .hero h1 em { animation: none !important; }
+  .is-intro * { animation: none !important; }
+}

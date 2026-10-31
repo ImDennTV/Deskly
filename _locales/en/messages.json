@@ -1,0 +1,7 @@
+{
+  "extName": { "message": "Deskly" },
+  "extDescription": { "message": "Organize sites and links into folders with a name, icon and color. Open a whole folder as a tab group, from the side panel or the new tab page." },
+  "actionTitle": { "message": "Open Deskly" },
+  "cmdPanel": { "message": "Open the Deskly side panel" },
+  "cmdNewLink": { "message": "Add the current page to Deskly" }
+}

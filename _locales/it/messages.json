@@ -1,0 +1,7 @@
+{
+  "extName": { "message": "Deskly" },
+  "extDescription": { "message": "Organizza siti e link in cartelle con nome, icona e colore. Apri un'intera cartella come gruppo di schede, dal pannello laterale o dalla nuova scheda." },
+  "actionTitle": { "message": "Apri Deskly" },
+  "cmdPanel": { "message": "Apri il pannello laterale di Deskly" },
+  "cmdNewLink": { "message": "Aggiungi la pagina corrente a Deskly" }
+}
