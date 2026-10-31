@@ -10,7 +10,7 @@ import { ENGINES, ENGINE_IDS } from './engines.js';
 import { previewPicker } from './previews.js';
 import { resetIcons } from '../core/favicons.js';
 import { checkForUpdate } from '../core/updates.js';
-import { THEME_PRESETS, CUSTOM_PREFIX, PRESET_PREFIX, MAX_CUSTOM_THEMES, findCustomTheme, findPreset, newTheme, sanitizeCustomThemes } from '../core/themes.js';
+import { THEME_PRESETS, CUSTOM_PREFIX, PRESET_PREFIX, MAX_CUSTOM_THEMES, findCustomTheme, findPreset, findThemeColors, newTheme, sanitizeCustomThemes } from '../core/themes.js';
 
 let themeFilter = 'all';
 const THEMES = ['auto', 'midnight', 'carbon', 'paper', 'ember', 'violet'];
@@ -123,13 +123,13 @@ export function openSettings() {
     const f = themeFilter;
     const inMode = (m) => f === 'all' || f === m;
     const cards = [];
+    s.customThemes.filter((c) => f === 'all' || f === 'mine' || f === c.mode)
+      .forEach((c) => cards.push(colorCard(c, s.theme === CUSTOM_PREFIX + c.id, () => useTheme(c))));
     if (f !== 'mine') {
       THEMES.filter((id) => id === 'auto' || inMode(BASE_MODE[id])).forEach((id) => cards.push(baseCard(id)));
       THEME_PRESETS.filter((p) => inMode(p.mode)).forEach((p) => cards.push(colorCard(p, preset?.id === p.id, () => set({ theme: PRESET_PREFIX + p.id, accent: p.accent }))));
     }
-    s.customThemes.filter((c) => f === 'all' || f === 'mine' || f === c.mode)
-      .forEach((c) => cards.push(colorCard(c, s.theme === CUSTOM_PREFIX + c.id, () => useTheme(c))));
-    const add = h('button', { class: 'theme-card theme-card--add', type: 'button', onclick: () => addTheme(preset || THEME_PRESETS.find((p) => (p.mode === 'dark') === dark)), disabled: s.customThemes.length >= MAX_CUSTOM_THEMES },
+    const add = h('button', { class: 'theme-card theme-card--add', type: 'button', onclick: () => { themeFilter = 'mine'; addTheme({ ...(findThemeColors(s) || THEME_PRESETS.find((p) => (p.mode === 'dark') === dark)), name: `${t('set.themeMy')} ${s.customThemes.length + 1}` }); }, disabled: s.customThemes.length >= MAX_CUSTOM_THEMES },
       h('div', { class: 'theme-card__pv' }, icon('plus', { size: 18 })), h('span', null, t('set.themeNew')));
     const colorRow = (c, key, label) => row(label, null, h('input', {
       class: 'colorpick', type: 'color', value: c[key], 'aria-label': label,
@@ -137,9 +137,7 @@ export function openSettings() {
     }));
     return h('div', { class: 'themebox' },
       h('div', { class: 'setrow setrow--stack' },
-        seg([['all', t('set.tfAll')], ['dark', t('mode.dark')], ['light', t('mode.light')], ['mine', t('set.tfMine')]], f, (v) => { themeFilter = v; render(); }),
-        h('div', { class: 'themes' }, cards, add),
-        h('span', { class: 'muted' }, t('set.themeNewHint'))),
+        seg([['all', t('set.tfAll')], ['dark', t('mode.dark')], ['light', t('mode.light')], ['mine', t('set.tfMine')]], f, (v) => { themeFilter = v; render(); })),
       active ? h('div', { class: 'themeedit' },
         row(t('set.themeName'), null, h('input', { class: 'input input--auto', type: 'text', value: active.name, maxlength: 24, autocomplete: 'off', 'aria-label': t('set.themeName'), onchange: (e) => editTheme(active.id, { name: e.target.value.trim() || active.name }) })),
         row(t('set.themeMode'), null, seg([['dark', t('mode.dark')], ['light', t('mode.light')]], active.mode, (v) => editTheme(active.id, { mode: v }))),
@@ -151,6 +149,9 @@ export function openSettings() {
           h('button', { class: 'btn', type: 'button', onclick: () => addTheme({ ...active, name: `${active.name} 2`.slice(0, 24) }) }, icon('copy', { size: 15 }), t('set.themeDup')),
           h('button', { class: 'btn', type: 'button', onclick: () => exportTheme(active) }, icon('share-2', { size: 15 }), t('set.themeExport')),
           h('button', { class: 'btn btn--ghost btn--danger', type: 'button', onclick: () => removeTheme(active) }, icon('trash-2', { size: 15 }), t('set.themeDelete')))) : null,
+      h('div', { class: 'setrow setrow--stack' },
+        h('div', { class: 'themes' }, add, cards),
+        h('span', { class: 'muted' }, t('set.themeNewHint'))),
       h('div', { class: 'data-actions' },
         preset ? h('button', { class: 'btn', type: 'button', onclick: () => addTheme({ ...preset, name: `${preset.name} 2`.slice(0, 24) }) }, icon('copy', { size: 15 }), t('set.themeFromPreset')) : null,
         h('button', { class: 'btn', type: 'button', onclick: importThemeDialog }, icon('upload', { size: 15 }), t('set.themeImport'))),
