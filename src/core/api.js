@@ -91,6 +91,34 @@ export const bookmarksApi = {
   },
 };
 
+// Permesso facoltativo di leggere la home dei siti: serve solo per prendere le loro icone grandi.
+const SITE_ORIGINS = ['https://*/*', 'http://*/*'];
+
+export const sitesApi = {
+  async has() {
+    if (!isExt) return false;
+    try {
+      return await chrome.permissions.contains({ origins: SITE_ORIGINS });
+    } catch {
+      return false;
+    }
+  },
+  async request() {
+    if (!isExt) return false;
+    try {
+      return await chrome.permissions.request({ origins: SITE_ORIGINS });
+    } catch {
+      return false;
+    }
+  },
+  async drop() {
+    if (!isExt) return;
+    try {
+      await chrome.permissions.remove({ origins: SITE_ORIGINS });
+    } catch {}
+  },
+};
+
 export async function copyText(text) {
   try {
     await navigator.clipboard.writeText(text);

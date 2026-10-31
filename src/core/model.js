@@ -1,5 +1,5 @@
 import { FOLDER_COLORS, normalizeHex, isHex } from './colors.js';
-import { sanitizeCustomThemes, isCustomTheme, CUSTOM_PREFIX } from './themes.js';
+import { sanitizeCustomThemes, isCustomTheme, CUSTOM_PREFIX, isPresetTheme, PRESET_PREFIX, THEME_PRESETS } from './themes.js';
 
 export const SCHEMA_VERSION = 2;
 
@@ -48,10 +48,12 @@ export const DEFAULT_SETTINGS = {
   userName: '',
   // comportamento
   groupOnOpen: true,
+  ungroupNewtab: true,
   openSame: true,
   focusExisting: true,
   favicons: true,
   hiResIcons: true,
+  siteIcons: false,
   searchEngine: 'chrome',
   webSuggest: true,
   historyHints: true,
@@ -79,7 +81,7 @@ const ENUMS = {
   bgDim: ['none', 'soft', 'strong'],
   searchEngine: ['chrome', 'google', 'duckduckgo', 'bing', 'brave', 'youtube'],
 };
-const BOOLS = ['bgBlur', 'grain', 'effects', 'showBrand', 'showClock', 'showDate', 'clock24', 'showSeconds', 'showGreeting', 'showSummary', 'showFavorites', 'showRecents', 'showSuggestions', 'favFirst', 'showCount', 'showSub', 'groupOnOpen', 'openSame', 'focusExisting', 'favicons', 'hiResIcons', 'webSuggest', 'historyHints', 'updateCheck'];
+const BOOLS = ['bgBlur', 'grain', 'effects', 'showBrand', 'showClock', 'showDate', 'clock24', 'showSeconds', 'showGreeting', 'showSummary', 'showFavorites', 'showRecents', 'showSuggestions', 'favFirst', 'showCount', 'showSub', 'groupOnOpen', 'ungroupNewtab', 'openSame', 'focusExisting', 'favicons', 'hiResIcons', 'siteIcons', 'webSuggest', 'historyHints', 'updateCheck'];
 
 const LIMITS = { folders: 500, links: 20000 };
 
@@ -186,6 +188,7 @@ export function migrate(raw) {
   if (isHex(s.accent)) doc.settings.accent = normalizeHex(s.accent);
   doc.settings.customThemes = sanitizeCustomThemes(s.customThemes);
   if (isCustomTheme(s.theme) && doc.settings.customThemes.some((c) => CUSTOM_PREFIX + c.id === s.theme)) doc.settings.theme = s.theme;
+  if (isPresetTheme(s.theme) && THEME_PRESETS.some((p) => PRESET_PREFIX + p.id === s.theme)) doc.settings.theme = s.theme;
   if (typeof s.userName === 'string') doc.settings.userName = s.userName.trim().slice(0, 40);
   if (typeof s.brandName === 'string') doc.settings.brandName = s.brandName.trim().slice(0, 24);
   // Dalla v2 la ricerca predefinita è quella vera di Chrome.

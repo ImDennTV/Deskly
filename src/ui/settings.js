@@ -2,14 +2,15 @@ import { h, icon, mount, modKey } from '../core/dom.js';
 import { t } from '../core/i18n.js';
 import * as store from '../core/store.js';
 import { FOLDER_COLORS, normalizeHex } from '../core/colors.js';
-import { downloadFile, extVersion } from '../core/api.js';
+import { downloadFile, extVersion, sitesApi } from '../core/api.js';
 import { modal, toast, confirmDialog } from './kit.js';
 import { THEME_PREVIEW, hasBackgroundImage, setBackgroundImage, clearBackgroundImage } from './theme.js';
 import { importBookmarks, openSmartImport } from './importer.js';
 import { ENGINES, ENGINE_IDS } from './engines.js';
 import { previewPicker } from './previews.js';
+import { resetIcons } from '../core/favicons.js';
 import { checkForUpdate } from '../core/updates.js';
-import { THEME_PRESETS, CUSTOM_PREFIX, MAX_CUSTOM_THEMES, findCustomTheme, newTheme, sanitizeCustomThemes } from '../core/themes.js';
+import { THEME_PRESETS, CUSTOM_PREFIX, PRESET_PREFIX, MAX_CUSTOM_THEMES, findCustomTheme, findPreset, newTheme, sanitizeCustomThemes } from '../core/themes.js';
 
 const THEMES = ['auto', 'midnight', 'carbon', 'paper', 'ember', 'violet'];
 const TABS = ['look', 'bg', 'page', 'behavior', 'data'];
@@ -106,11 +107,13 @@ export function openSettings() {
       onclick: () => useTheme(c),
     }, h('div', { class: 'theme-card__pv' }, h('i'), h('i'), h('i')), h('span', null, c.name));
     const dark = !matchMedia('(prefers-color-scheme: light)').matches;
+    const preset = findPreset(s);
     const swatchOf = (p) => h('button', {
-      class: 'preset', type: 'button', title: p.name, 'aria-label': p.name,
+      class: 'preset', type: 'button', title: p.name, 'aria-label': p.name, 'aria-pressed': preset?.id === p.id ? 'true' : 'false',
       style: { '--p-bg': p.bg, '--p-surface': p.surface, '--p-accent': p.accent, '--p-text': p.text },
-      onclick: () => addTheme(p),
+      onclick: () => set({ theme: PRESET_PREFIX + p.id, accent: p.accent }),
     }, h('i'), h('span', null, p.name));
+    const gallery = (mode) => h('div', { class: 'presets' }, THEME_PRESETS.filter((p) => p.mode === mode).map(swatchOf));
     const colorRow = (c, key, label) => row(label, null, h('input', {
       class: 'colorpick', type: 'color', value: c[key], 'aria-label': label,
       oninput: (e) => editTheme(c.id, { [key]: normalizeHex(e.target.value) }, key === 'accent' ? { accent: normalizeHex(e.target.value) } : {}),
@@ -135,8 +138,13 @@ export function openSettings() {
           h('button', { class: 'btn btn--ghost btn--danger', type: 'button', onclick: () => removeTheme(active) }, icon('trash-2', { size: 15 }), t('set.themeDelete')))) : null,
       h('div', { class: 'setrow setrow--stack' },
         h('span', { class: 'label' }, t('set.themeGallery')),
-        h('div', { class: 'presets' }, THEME_PRESETS.map(swatchOf)),
-        h('div', { class: 'data-actions' }, h('button', { class: 'btn', type: 'button', onclick: importThemeDialog }, icon('upload', { size: 15 }), t('set.themeImport')))),
+        h('span', { class: 'muted presets__cap' }, t('mode.dark')),
+        gallery('dark'),
+        h('span', { class: 'muted presets__cap' }, t('mode.light')),
+        gallery('light'),
+        h('div', { class: 'data-actions' },
+          preset ? h('button', { class: 'btn', type: 'button', onclick: () => addTheme({ ...preset, name: `${preset.name} 2`.slice(0, 24) }) }, icon('copy', { size: 15 }), t('set.themeFromPreset')) : null,
+          h('button', { class: 'btn', type: 'button', onclick: importThemeDialog }, icon('upload', { size: 15 }), t('set.themeImport')))),
     );
   };
 
@@ -252,10 +260,17 @@ export function openSettings() {
     h('section', { class: 'setgroup' },
       h('h3', null, t('settings.behavior')),
       tog(s, 'groupOnOpen', 'settings.groupOnOpen', 'settings.groupOnOpenHint'),
+      tog(s, 'ungroupNewtab', 'set.ungroup', 'set.ungroupHint'),
       tog(s, 'openSame', 'set.openSame', 'set.openSameHint'),
       tog(s, 'focusExisting', 'settings.focusExisting'),
       tog(s, 'favicons', 'settings.favicons'),
       s.favicons ? tog(s, 'hiResIcons', 'set.hiIcons', 'set.hiIconsHint') : null,
+      s.favicons ? row(t('set.siteIcons'), t('set.siteIconsHint'), toggle(s.siteIcons, t('set.siteIcons'), async (v) => {
+        if (v && !(await sitesApi.request())) return toast(t('toast.sitePerm'));
+        if (!v) sitesApi.drop();
+        else await resetIcons();
+        set({ siteIcons: v });
+      })) : null,
     ),
     h('section', { class: 'setgroup' },
       h('h3', null, t('set.search')),

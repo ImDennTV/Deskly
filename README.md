@@ -41,7 +41,7 @@ Le scorciatoie si possono cambiare in `chrome://extensions/shortcuts`.
 
 ## Personalizzazione
 
-**Temi personalizzati** (Impostazioni → Aspetto): parti da un preset (Nord, Dracula, Rosé, Foresta, Oceano, Sabbia, Sakura, Menta) o crea il tuo scegliendo quattro colori; fino a 12 temi, duplicabili, esportabili e importabili come testo. Le **etichette** dei link si aggiungono con un selettore a icone, le **icone dei siti** sono in alta qualità (128 px) e il gruppo di schede di Chrome si scioglie da solo se torni indietro alla nuova scheda.
+**Temi personalizzati** (Impostazioni → Aspetto): parti da un preset (40 temi pronti, scuri e chiari: Nord, Dracula, Synthwave, Tokyo, Sakura, Limone, Pop e molti altri, applicabili con un clic) o crea il tuo scegliendo quattro colori; fino a 12 temi, duplicabili, esportabili e importabili come testo. Le **etichette** dei link si aggiungono con un selettore a icone, le **icone dei siti** sono in alta qualità (128 px; con «Icone dal sito» in Comportamento Deskly prende anche quelle grandi dal sito stesso, dopo un tuo permesso) e il gruppo di schede di Chrome si scioglie da solo: la nuova scheda di Deskly non resta mai dentro un gruppo.
 
 **Disposizione e ordine** (Impostazioni → Pagina): scegli con anteprime il layout (griglia, solo icone, elenco, compatta), le colonne di cartelle (auto, 1–4), la dimensione delle icone e la larghezza. Cartelle e link si possono ordinare a mano, per nome, per numero di link o per uso/recenza (solo nella vista: il tuo ordine salvato non cambia), con i preferiti in cima e il numero di link visibili per cartella. In Aspetto scegli stile delle carte e forma delle icone (arrotondata, cerchio, quadrata); in Comportamento decidi se aprire i link nella stessa scheda.
 
@@ -67,6 +67,7 @@ Il piede di pagina di Chrome («Personalizza Chrome») non si può togliere da u
 | `search` | cercare con il motore predefinito di Chrome |
 | host `suggestqueries.google.com` | suggerimenti web mentre scrivi |
 | host `t3.gstatic.com` | icone dei siti ad alta qualità (solo il dominio) |
+| host opzionali `https://*/*`, `http://*/*` | solo se attivi «Icone dal sito»: scaricare l'icona grande dal sito (chiesto in quel momento, revocato se spegni)
 | host `api.github.com` | sapere se esiste una versione più recente (solo lettura, nessun dato inviato) |
 | `bookmarks` (opzionale) | solo se importi i preferiti; viene chiesto in quel momento |
 

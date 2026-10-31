@@ -111,53 +111,88 @@ async function openLink({ url, background = false, folderId = null, sameTab = fa
     }
   }
 
+  if (sameTab && from) await markFresh(from.id);
   let tab;
   if (sameTab && from) tab = await chrome.tabs.update(from.id, { url: target });
   else tab = await chrome.tabs.create({ url: target, active: !background, windowId: from?.windowId });
-  if (groupOnOpen && folder && tab) {
-    await groupTabs([tab.id], folder, tab.windowId);
-    // Nella stessa scheda ricordo che nasce da Deskly: se torna alla nuova scheda (Indietro) esce dal gruppo.
-    if (sameTab && from) await markOrigin(from.id);
+  if (groupOnOpen && folder && tab) await groupTabs([tab.id], folder, tab.windowId);
+}
+
+// La nuova scheda di Deskly non deve restare in un gruppo di Chrome (Indietro dopo un link, "+" del gruppo, trascinamento).
+// Fa eccezione la scheda che Deskly sta portando al link in questo momento: per qualche secondo non la tocco.
+const FRESH = 'deskly-fresh';
+const FRESH_GRACE = 4000;
+const NEWTAB_URLS = [chrome.runtime.getURL('newtab.html'), 'chrome://newtab', 'chrome://new-tab-page'];
+const isNewTab = (url) => Boolean(url) && NEWTAB_URLS.some((u) => url.startsWith(u));
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const leaving = new Set();
+
+async function markFresh(tabId) {
+  const map = (await chrome.storage.session.get(FRESH))[FRESH] || {};
+  map[tabId] = Date.now();
+  await chrome.storage.session.set({ [FRESH]: map });
+}
+
+async function isFresh(tabId) {
+  const map = (await chrome.storage.session.get(FRESH))[FRESH] || {};
+  const at = map[tabId];
+  if (at == null) return false;
+  if (Date.now() - at < FRESH_GRACE) return true;
+  delete map[tabId];
+  await chrome.storage.session.set({ [FRESH]: map });
+  return false;
+}
+
+// Chrome rifiuta di modificare le schede mentre l'utente le trascina: riprovo qualche volta.
+async function ungroupWithRetry(tabId) {
+  for (let i = 0; i < 6; i++) {
+    try {
+      await chrome.tabs.ungroup(tabId);
+      return;
+    } catch {
+      await sleep(250 * (i + 1));
+    }
   }
 }
 
-// Schede di Deskly finite in un gruppo per aver aperto un link nella stessa scheda: tabId -> istante.
-// Solo queste escono dal gruppo al ritorno: una nuova scheda creata col "+" del gruppo resta dove l'utente l'ha messa.
-const ORIGINS = 'deskly-origins';
-const ORIGIN_GRACE = 3000;
-const NEWTAB_URLS = [chrome.runtime.getURL('newtab.html'), 'chrome://newtab', 'chrome://new-tab-page'];
-const isNewTab = (url) => Boolean(url) && NEWTAB_URLS.some((u) => url.startsWith(u));
-
-async function markOrigin(tabId) {
-  const map = (await chrome.storage.session.get(ORIGINS))[ORIGINS] || {};
-  map[tabId] = Date.now();
-  await chrome.storage.session.set({ [ORIGINS]: map });
-}
-
-chrome.tabs.onUpdated.addListener(async (tabId, change, tab) => {
-  if (!change.url && change.status !== 'complete') return;
-  if (tab.groupId == null || tab.groupId < 0) return;
+async function sweepTab(tab) {
+  if (!tab || tab.groupId == null || tab.groupId < 0 || leaving.has(tab.id)) return;
   // Durante la navigazione verso il link l'indirizzo attuale è ancora la nuova scheda: conta dove sta andando.
   if (tab.pendingUrl && !isNewTab(tab.pendingUrl)) return;
-  if (!isNewTab(change.url || tab.url)) return;
+  if (!isNewTab(tab.url || tab.pendingUrl)) return;
+  leaving.add(tab.id);
   try {
-    const map = (await chrome.storage.session.get(ORIGINS))[ORIGINS] || {};
-    const at = map[tabId];
-    if (at == null || Date.now() - at < ORIGIN_GRACE) return;
-    delete map[tabId];
-    await chrome.storage.session.set({ [ORIGINS]: map });
-    await chrome.tabs.ungroup(tabId);
+    if (await isFresh(tab.id)) return;
+    if (!(await loadDoc()).settings.ungroupNewtab) return;
+    await ungroupWithRetry(tab.id);
+  } catch {
+  } finally {
+    leaving.delete(tab.id);
+  }
+}
+
+chrome.tabs.onUpdated.addListener((tabId, change, tab) => sweepTab(tab));
+chrome.tabs.onCreated.addListener((tab) => sweepTab(tab));
+chrome.tabs.onActivated.addListener(async ({ tabId }) => {
+  try {
+    await sweepTab(await chrome.tabs.get(tabId));
   } catch {}
 });
 
 chrome.tabs.onRemoved.addListener(async (tabId) => {
   try {
-    const map = (await chrome.storage.session.get(ORIGINS))[ORIGINS] || {};
+    const map = (await chrome.storage.session.get(FRESH))[FRESH] || {};
     if (map[tabId] == null) return;
     delete map[tabId];
-    await chrome.storage.session.set({ [ORIGINS]: map });
+    await chrome.storage.session.set({ [FRESH]: map });
   } catch {}
 });
+
+async function sweepAll() {
+  try {
+    for (const tab of await chrome.tabs.query({})) await sweepTab(tab);
+  } catch {}
+}
 
 async function openFolder({ folderId }, sender) {
   const doc = await loadDoc();
@@ -325,6 +360,7 @@ chrome.omnibox.onInputEntered.addListener(async (text, disposition) => {
 // ---------- avvio ----------
 
 function setup() {
+  sweepAll();
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
   rebuildMenu();
 }

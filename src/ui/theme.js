@@ -1,5 +1,5 @@
 import { readableOn } from '../core/colors.js';
-import { findCustomTheme, baseThemeOf, themeVars } from '../core/themes.js';
+import { findThemeColors, baseThemeOf, themeVars } from '../core/themes.js';
 
 const mq = matchMedia('(prefers-color-scheme: light)');
 const BG_KEY = 'deskly-bg';
@@ -62,7 +62,7 @@ export function applyTheme(settings) {
   current = settings;
   const root = document.documentElement;
   const d = root.dataset;
-  const custom = findCustomTheme(settings);
+  const custom = findThemeColors(settings);
   const theme = custom ? baseThemeOf(custom) : resolveTheme(settings.theme);
   const ink = readableOn(settings.accent);
   d.theme = theme;
