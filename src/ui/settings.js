@@ -12,6 +12,7 @@ import { resetIcons } from '../core/favicons.js';
 import { checkForUpdate } from '../core/updates.js';
 import { THEME_PRESETS, CUSTOM_PREFIX, PRESET_PREFIX, MAX_CUSTOM_THEMES, findCustomTheme, findPreset, newTheme, sanitizeCustomThemes } from '../core/themes.js';
 
+let themeFilter = 'all';
 const THEMES = ['auto', 'midnight', 'carbon', 'paper', 'ember', 'violet'];
 const TABS = ['look', 'bg', 'page', 'behavior', 'data'];
 let activeTab = 'look';
@@ -99,32 +100,46 @@ export function openSettings() {
     area.focus();
   }
 
+  const BASE_MODE = { midnight: 'dark', carbon: 'dark', paper: 'light', ember: 'dark', violet: 'dark' };
   const themesGroup = (s) => {
     const active = findCustomTheme(s);
-    const card = (c) => h('button', {
-      class: 'theme-card', type: 'button', 'aria-pressed': s.theme === CUSTOM_PREFIX + c.id ? 'true' : 'false',
-      style: { '--p-bg': c.bg, '--p-surface': c.surface, '--p-line': `color-mix(in srgb, ${c.text} 18%, ${c.surface})`, '--p-accent': c.accent },
-      onclick: () => useTheme(c),
-    }, h('div', { class: 'theme-card__pv' }, h('i'), h('i'), h('i')), h('span', null, c.name));
-    const dark = !matchMedia('(prefers-color-scheme: light)').matches;
     const preset = findPreset(s);
-    const swatchOf = (p) => h('button', {
-      class: 'preset', type: 'button', title: p.name, 'aria-label': p.name, 'aria-pressed': preset?.id === p.id ? 'true' : 'false',
-      style: { '--p-bg': p.bg, '--p-surface': p.surface, '--p-accent': p.accent, '--p-text': p.text },
-      onclick: () => set({ theme: PRESET_PREFIX + p.id, accent: p.accent }),
-    }, h('i'), h('span', null, p.name));
-    const gallery = (mode) => h('div', { class: 'presets' }, THEME_PRESETS.filter((p) => p.mode === mode).map(swatchOf));
+    const dark = !matchMedia('(prefers-color-scheme: light)').matches;
+    const line = (c) => `color-mix(in srgb, ${c.text} 18%, ${c.surface})`;
+    const pv = () => h('div', { class: 'theme-card__pv' }, h('i'), h('i'), h('i'));
+    const baseCard = (id) => {
+      const p = THEME_PREVIEW[id === 'auto' ? (dark ? 'midnight' : 'paper') : id];
+      return h('button', {
+        class: 'theme-card', type: 'button', 'aria-pressed': s.theme === id ? 'true' : 'false',
+        style: { '--p-bg': p.bg, '--p-surface': p.surface, '--p-line': p.line, '--p-accent': s.accent },
+        onclick: () => set({ theme: id }),
+      }, pv(), h('span', null, t(`theme.${id}`)));
+    };
+    const colorCard = (c, pressed, onPick) => h('button', {
+      class: 'theme-card', type: 'button', title: c.name, 'aria-pressed': pressed ? 'true' : 'false',
+      style: { '--p-bg': c.bg, '--p-surface': c.surface, '--p-line': line(c), '--p-accent': c.accent },
+      onclick: onPick,
+    }, pv(), h('span', null, c.name));
+    const f = themeFilter;
+    const inMode = (m) => f === 'all' || f === m;
+    const cards = [];
+    if (f !== 'mine') {
+      THEMES.filter((id) => id === 'auto' || inMode(BASE_MODE[id])).forEach((id) => cards.push(baseCard(id)));
+      THEME_PRESETS.filter((p) => inMode(p.mode)).forEach((p) => cards.push(colorCard(p, preset?.id === p.id, () => set({ theme: PRESET_PREFIX + p.id, accent: p.accent }))));
+    }
+    s.customThemes.filter((c) => f === 'all' || f === 'mine' || f === c.mode)
+      .forEach((c) => cards.push(colorCard(c, s.theme === CUSTOM_PREFIX + c.id, () => useTheme(c))));
+    const add = h('button', { class: 'theme-card theme-card--add', type: 'button', onclick: () => addTheme(preset || THEME_PRESETS.find((p) => (p.mode === 'dark') === dark)), disabled: s.customThemes.length >= MAX_CUSTOM_THEMES },
+      h('div', { class: 'theme-card__pv' }, icon('plus', { size: 18 })), h('span', null, t('set.themeNew')));
     const colorRow = (c, key, label) => row(label, null, h('input', {
       class: 'colorpick', type: 'color', value: c[key], 'aria-label': label,
       oninput: (e) => editTheme(c.id, { [key]: normalizeHex(e.target.value) }, key === 'accent' ? { accent: normalizeHex(e.target.value) } : {}),
     }));
     return h('div', { class: 'themebox' },
       h('div', { class: 'setrow setrow--stack' },
-        h('span', { class: 'label' }, t('set.themeMine')),
-        h('div', { class: 'themes' },
-          s.customThemes.map(card),
-          h('button', { class: 'theme-card theme-card--add', type: 'button', onclick: () => addTheme(THEME_PRESETS.find((p) => (p.mode === 'dark') === dark)), disabled: s.customThemes.length >= MAX_CUSTOM_THEMES },
-            h('div', { class: 'theme-card__pv' }, icon('plus', { size: 18 })), h('span', null, t('set.themeNew'))))),
+        seg([['all', t('set.tfAll')], ['dark', t('mode.dark')], ['light', t('mode.light')], ['mine', t('set.tfMine')]], f, (v) => { themeFilter = v; render(); }),
+        h('div', { class: 'themes' }, cards, add),
+        h('span', { class: 'muted' }, t('set.themeNewHint'))),
       active ? h('div', { class: 'themeedit' },
         row(t('set.themeName'), null, h('input', { class: 'input input--auto', type: 'text', value: active.name, maxlength: 24, autocomplete: 'off', 'aria-label': t('set.themeName'), onchange: (e) => editTheme(active.id, { name: e.target.value.trim() || active.name }) })),
         row(t('set.themeMode'), null, seg([['dark', t('mode.dark')], ['light', t('mode.light')]], active.mode, (v) => editTheme(active.id, { mode: v }))),
@@ -136,33 +151,18 @@ export function openSettings() {
           h('button', { class: 'btn', type: 'button', onclick: () => addTheme({ ...active, name: `${active.name} 2`.slice(0, 24) }) }, icon('copy', { size: 15 }), t('set.themeDup')),
           h('button', { class: 'btn', type: 'button', onclick: () => exportTheme(active) }, icon('share-2', { size: 15 }), t('set.themeExport')),
           h('button', { class: 'btn btn--ghost btn--danger', type: 'button', onclick: () => removeTheme(active) }, icon('trash-2', { size: 15 }), t('set.themeDelete')))) : null,
-      h('div', { class: 'setrow setrow--stack' },
-        h('span', { class: 'label' }, t('set.themeGallery')),
-        h('span', { class: 'muted presets__cap' }, t('mode.dark')),
-        gallery('dark'),
-        h('span', { class: 'muted presets__cap' }, t('mode.light')),
-        gallery('light'),
-        h('div', { class: 'data-actions' },
-          preset ? h('button', { class: 'btn', type: 'button', onclick: () => addTheme({ ...preset, name: `${preset.name} 2`.slice(0, 24) }) }, icon('copy', { size: 15 }), t('set.themeFromPreset')) : null,
-          h('button', { class: 'btn', type: 'button', onclick: importThemeDialog }, icon('upload', { size: 15 }), t('set.themeImport')))),
+      h('div', { class: 'data-actions' },
+        preset ? h('button', { class: 'btn', type: 'button', onclick: () => addTheme({ ...preset, name: `${preset.name} 2`.slice(0, 24) }) }, icon('copy', { size: 15 }), t('set.themeFromPreset')) : null,
+        h('button', { class: 'btn', type: 'button', onclick: importThemeDialog }, icon('upload', { size: 15 }), t('set.themeImport'))),
     );
   };
 
   const lookTab = (s) => {
-    const themeCard = (id) => {
-      const p = THEME_PREVIEW[id === 'auto' ? (matchMedia('(prefers-color-scheme: light)').matches ? 'paper' : 'midnight') : id];
-      return h('button', {
-        class: 'theme-card', type: 'button', 'aria-pressed': s.theme === id ? 'true' : 'false',
-        style: { '--p-bg': p.bg, '--p-surface': p.surface, '--p-line': p.line, '--p-accent': s.accent },
-        onclick: () => set({ theme: id }),
-      }, h('div', { class: 'theme-card__pv' }, h('i'), h('i'), h('i')), h('span', null, t(`theme.${id}`)));
-    };
     const custom = h('input', { type: 'color', value: s.accent, 'aria-label': t('folder.custom'), oninput: (e) => set({ accent: normalizeHex(e.target.value) }), onchange: () => render() });
     const known = FOLDER_COLORS.some((c) => c.hex === s.accent);
     return [
       h('section', { class: 'setgroup' },
         h('h3', null, t('settings.appearance')),
-        h('div', { class: 'themes' }, THEMES.map(themeCard)),
         themesGroup(s),
         h('div', { class: 'setrow setrow--stack' }, h('span', { class: 'label' }, t('settings.accent')),
           h('div', { class: 'swatches' },
