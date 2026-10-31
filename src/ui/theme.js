@@ -91,7 +91,12 @@ export function applyTheme(settings) {
   else root.style.removeProperty('--bg-image');
   root.style.setProperty('--accent', settings.accent);
   root.style.setProperty('--accent-ink', ink);
+  d.cols = settings.folderCols;
+  d.ishape = settings.iconShape;
   document.body.dataset.layout = settings.newtabLayout;
+  // Cartelle in una sola colonna: servono sia al CSS sia al trascinamento (marcatori verticali).
+  if (settings.folderCols === '1' || (settings.folderCols === 'auto' && settings.newtabLayout === 'list')) document.body.dataset.stack = '';
+  else delete document.body.dataset.stack;
   try {
     localStorage.setItem('deskly-boot', JSON.stringify({
       theme: custom ? theme : settings.theme, vars, accent: settings.accent, ink, density: settings.density, radius: settings.radius,

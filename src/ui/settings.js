@@ -7,6 +7,7 @@ import { modal, toast, confirmDialog } from './kit.js';
 import { THEME_PREVIEW, hasBackgroundImage, setBackgroundImage, clearBackgroundImage } from './theme.js';
 import { importBookmarks, openSmartImport } from './importer.js';
 import { ENGINES, ENGINE_IDS } from './engines.js';
+import { previewPicker } from './previews.js';
 import { checkForUpdate } from '../core/updates.js';
 import { THEME_PRESETS, CUSTOM_PREFIX, MAX_CUSTOM_THEMES, findCustomTheme, newTheme, sanitizeCustomThemes } from '../core/themes.js';
 
@@ -34,6 +35,11 @@ export function openSettings() {
 
   const tog = (s, key, title, desc) => row(t(title), desc ? t(desc) : null, toggle(s[key], t(title), (v) => set({ [key]: v })));
   const pick = (s, key, title, opts, desc) => row(t(title), desc ? t(desc) : null, seg(opts.map(([v, k]) => [v, t(k)]), s[key], (v) => set({ [key]: v })));
+
+  // Come `pick`, ma ogni scelta è una carta con la sua anteprima.
+  const pvp = (s, key, kind, title, opts, desc) => previewPicker({
+    kind, value: s[key], opts, title: t(title), desc: desc ? t(desc) : null, onPick: (v) => set({ [key]: v }),
+  });
 
   // ---- Temi personalizzati: carte, galleria, editor dei 4 colori, import/export ----
   const cur = () => store.get().settings;
@@ -164,7 +170,8 @@ export function openSettings() {
       ),
       h('section', { class: 'setgroup' },
         h('h3', null, t('set.shape')),
-        pick(s, 'cardStyle', 'set.card', [['solid', 'card.solid'], ['outline', 'card.outline'], ['tinted', 'card.tinted']]),
+        pvp(s, 'cardStyle', 'card', 'set.card', [['solid', 'card.solid'], ['outline', 'card.outline'], ['tinted', 'card.tinted']]),
+        pvp(s, 'iconShape', 'shape', 'set.ishape', [['rounded', 'ishape.rounded'], ['circle', 'ishape.circle'], ['square', 'ishape.square']]),
         pick(s, 'density', 'settings.density', [['compact', 'density.compact'], ['cozy', 'density.cozy'], ['roomy', 'density.roomy']]),
         pick(s, 'radius', 'settings.radius', [['sharp', 'radius.sharp'], ['soft', 'radius.soft'], ['round', 'radius.round']]),
         row(t('settings.language'), null, seg([['auto', 'Auto'], ['it', 'Italiano'], ['en', 'English']], s.lang, (v) => set({ lang: v }))),
@@ -199,9 +206,22 @@ export function openSettings() {
   const pageTab = (s) => [
     h('section', { class: 'setgroup' },
       h('h3', null, t('set.layout')),
-      pick(s, 'newtabLayout', 'settings.newtabLayout', [['grid', 'layout.grid'], ['list', 'layout.list']]),
-      pick(s, 'tileSize', 'set.tile', [['small', 'size.small'], ['medium', 'size.medium'], ['large', 'size.large']]),
-      pick(s, 'pageWidth', 'set.width', [['narrow', 'width.narrow'], ['normal', 'width.normal'], ['wide', 'width.wide']]),
+      pvp(s, 'newtabLayout', 'layout', 'settings.newtabLayout', [['grid', 'layout.grid'], ['icons', 'layout.icons'], ['list', 'layout.list'], ['compact', 'layout.compact']]),
+      pvp(s, 'folderCols', 'cols', 'set.cols', [['auto', 'cols.auto'], ['1', 'cols.1'], ['2', 'cols.2'], ['3', 'cols.3'], ['4', 'cols.4']], 'set.colsHint'),
+      pvp(s, 'tileSize', 'size', 'set.tile', [['small', 'size.small'], ['medium', 'size.medium'], ['large', 'size.large']]),
+      pvp(s, 'pageWidth', 'width', 'set.width', [['narrow', 'width.narrow'], ['normal', 'width.normal'], ['wide', 'width.wide']]),
+    ),
+    h('section', { class: 'setgroup' },
+      h('h3', null, t('set.order')),
+      pvp(s, 'folderSort', 'sort', 'set.sortFolders', [['manual', 'sort.manual'], ['name', 'sort.name'], ['size', 'sort.size'], ['used', 'sort.used']], 'set.sortHint'),
+      pvp(s, 'linkSort', 'sort', 'set.sortLinks', [['manual', 'sort.manual'], ['name', 'sort.name'], ['used', 'sort.used'], ['recent', 'sort.recent']]),
+      tog(s, 'favFirst', 'set.favFirst', 'set.favFirstHint'),
+      pvp(s, 'foldAt', 'fold', 'set.foldAt', [['few', 'fold.few'], ['normal', 'fold.normal'], ['all', 'fold.all']], 'set.foldAtHint'),
+    ),
+    h('section', { class: 'setgroup' },
+      h('h3', null, t('set.details')),
+      tog(s, 'showCount', 'set.showCount'),
+      tog(s, 'showSub', 'set.showSub', 'set.showSubHint'),
     ),
     h('section', { class: 'setgroup' },
       h('h3', null, t('set.brand')),
@@ -232,6 +252,7 @@ export function openSettings() {
     h('section', { class: 'setgroup' },
       h('h3', null, t('settings.behavior')),
       tog(s, 'groupOnOpen', 'settings.groupOnOpen', 'settings.groupOnOpenHint'),
+      tog(s, 'openSame', 'set.openSame', 'set.openSameHint'),
       tog(s, 'focusExisting', 'settings.focusExisting'),
       tog(s, 'favicons', 'settings.favicons'),
       s.favicons ? tog(s, 'hiResIcons', 'set.hiIcons', 'set.hiIconsHint') : null,

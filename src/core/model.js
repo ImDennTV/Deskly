@@ -17,6 +17,15 @@ export const DEFAULT_SETTINGS = {
   tileSize: 'medium',
   pageWidth: 'normal',
   newtabLayout: 'grid',
+  iconShape: 'rounded',
+  // disposizione e ordine
+  folderCols: 'auto',
+  folderSort: 'manual',
+  linkSort: 'manual',
+  favFirst: false,
+  foldAt: 'normal',
+  showCount: true,
+  showSub: true,
   // sfondo
   bgStyle: 'aurora',
   auroraLevel: 'mid',
@@ -39,6 +48,7 @@ export const DEFAULT_SETTINGS = {
   userName: '',
   // comportamento
   groupOnOpen: true,
+  openSame: true,
   focusExisting: true,
   favicons: true,
   hiResIcons: true,
@@ -58,13 +68,18 @@ const ENUMS = {
   cardStyle: ['solid', 'outline', 'tinted'],
   tileSize: ['small', 'medium', 'large'],
   pageWidth: ['narrow', 'normal', 'wide'],
-  newtabLayout: ['grid', 'list'],
+  newtabLayout: ['grid', 'list', 'compact', 'icons'],
+  iconShape: ['rounded', 'circle', 'square'],
+  folderCols: ['auto', '1', '2', '3', '4'],
+  folderSort: ['manual', 'name', 'size', 'used'],
+  linkSort: ['manual', 'name', 'used', 'recent'],
+  foldAt: ['few', 'normal', 'all'],
   bgStyle: ['aurora', 'plain', 'gradient', 'image'],
   auroraLevel: ['low', 'mid', 'high'],
   bgDim: ['none', 'soft', 'strong'],
   searchEngine: ['chrome', 'google', 'duckduckgo', 'bing', 'brave', 'youtube'],
 };
-const BOOLS = ['bgBlur', 'grain', 'effects', 'showBrand', 'showClock', 'showDate', 'clock24', 'showSeconds', 'showGreeting', 'showSummary', 'showFavorites', 'showRecents', 'showSuggestions', 'groupOnOpen', 'focusExisting', 'favicons', 'hiResIcons', 'webSuggest', 'historyHints', 'updateCheck'];
+const BOOLS = ['bgBlur', 'grain', 'effects', 'showBrand', 'showClock', 'showDate', 'clock24', 'showSeconds', 'showGreeting', 'showSummary', 'showFavorites', 'showRecents', 'showSuggestions', 'favFirst', 'showCount', 'showSub', 'groupOnOpen', 'openSame', 'focusExisting', 'favicons', 'hiResIcons', 'webSuggest', 'historyHints', 'updateCheck'];
 
 const LIMITS = { folders: 500, links: 20000 };
 

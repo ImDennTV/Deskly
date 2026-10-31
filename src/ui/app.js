@@ -40,9 +40,49 @@ const undoAction = () => ({ label: t('common.undo'), run: undo });
 
 // ---------- azioni ----------
 
+// Nella nuova scheda i link si aprono sul posto, a meno che l'utente non preferisca una scheda nuova.
+const sameTabFor = (background) => mode === 'newtab' && !background && store.get().settings.openSame;
+
 function openLink(link, folder, { background = false } = {}) {
   store.touchLink(link.id);
-  tabsApi.openLink(link.url, { background, folderId: folder?.id, sameTab: mode === 'newtab' && !background });
+  tabsApi.openLink(link.url, { background, folderId: folder?.id, sameTab: sameTabFor(background) });
+}
+
+// ---------- ordine di visualizzazione ----------
+// Solo la vista cambia: l'ordine salvato (quello del trascinamento) resta intatto.
+
+const collate = (a, b) => String(a).localeCompare(String(b), getLang(), { sensitivity: 'base', numeric: true });
+
+function viewLinks(links, s, stats) {
+  let list = links;
+  if (s.linkSort !== 'manual') {
+    const uses = (l) => stats[l.id]?.n || 0;
+    const last = (l) => stats[l.id]?.last || 0;
+    const by = {
+      name: (a, b) => collate(a.title, b.title),
+      used: (a, b) => uses(b) - uses(a) || collate(a.title, b.title),
+      recent: (a, b) => last(b) - last(a) || collate(a.title, b.title),
+    }[s.linkSort];
+    list = [...list].sort(by);
+  }
+  if (s.favFirst && list.some((l) => l.fav)) list = [...list.filter((l) => l.fav), ...list.filter((l) => !l.fav)];
+  return list;
+}
+
+function viewFolders(doc) {
+  const s = doc.settings;
+  const folders = doc.folders.map((f) => {
+    const links = viewLinks(f.links, s, doc.stats);
+    return links === f.links ? f : { ...f, links };
+  });
+  if (s.folderSort === 'manual') return folders;
+  const uses = (f) => f.links.reduce((n, l) => n + (doc.stats[l.id]?.n || 0), 0);
+  const by = {
+    name: (a, b) => collate(a.name, b.name),
+    size: (a, b) => b.links.length - a.links.length || collate(a.name, b.name),
+    used: (a, b) => uses(b) - uses(a) || collate(a.name, b.name),
+  }[s.folderSort];
+  return folders.sort(by);
 }
 
 function newFolder() {
@@ -181,6 +221,8 @@ const ctx = {
   get settings() { return store.get().settings; },
   mode,
   get canDrag() { return !searching; },
+  // Con un ordine automatico le cartelle non si trascinano: la maniglia sparisce.
+  get canDragFolder() { return !searching && store.get().settings.folderSort === 'manual'; },
   get forceOpen() { return searching; },
   expanded,
   openLink,
@@ -213,12 +255,12 @@ function buildShell() {
     web: {
       getEngine: () => store.get().settings.searchEngine,
       setEngine: (id) => store.updateSettings({ searchEngine: id }),
-      go: (url, { background = false } = {}) => tabsApi.openLink(url, { background, sameTab: mode === 'newtab' && !background }),
+      go: (url, { background = false } = {}) => tabsApi.openLink(url, { background, sameTab: sameTabFor(background) }),
       // "Chrome" usa il motore scelto in Chrome stesso; gli altri aprono il loro indirizzo di ricerca.
       search: (text, { background = false } = {}) => {
         const id = store.get().settings.searchEngine;
         if (id === 'chrome' && searchApi.query(text, mode === 'panel' || background)) return;
-        tabsApi.openLink(searchUrl(id, text), { background, sameTab: mode === 'newtab' && !background });
+        tabsApi.openLink(searchUrl(id, text), { background, sameTab: sameTabFor(background) });
       },
       prefs: () => {
         const s = store.get().settings;
@@ -341,7 +383,7 @@ function render() {
     }
     if (hasFolders && doc.settings.showSuggestions) out.push(suggestionsSection());
     if (hasFolders) {
-      out.push(section(t('home.folders'), h('div', { class: 'folders' }, doc.folders.map((f) => folderCard(f, ctx))), doc.folders.length));
+      out.push(section(t('home.folders'), h('div', { class: 'folders' }, viewFolders(doc).map((f) => folderCard(f, ctx))), doc.folders.length));
     } else {
       out.push(emptyState(ctx));
     }
@@ -446,6 +488,10 @@ async function start() {
     moveLink: store.moveLink,
     moveFolder: store.moveFolder,
     enabled: () => !searching,
+    sortedLinks: () => {
+      const s = store.get().settings;
+      return s.linkSort !== 'manual' || s.favFirst;
+    },
   });
 
   document.addEventListener('keydown', (e) => {

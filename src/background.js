@@ -114,19 +114,48 @@ async function openLink({ url, background = false, folderId = null, sameTab = fa
   let tab;
   if (sameTab && from) tab = await chrome.tabs.update(from.id, { url: target });
   else tab = await chrome.tabs.create({ url: target, active: !background, windowId: from?.windowId });
-  // Nella stessa scheda non si raggruppa: la scheda di Deskly resterebbe nel gruppo anche tornando indietro.
-  if (groupOnOpen && folder && tab && !(sameTab && from)) await groupTabs([tab.id], folder, tab.windowId);
+  if (groupOnOpen && folder && tab) {
+    await groupTabs([tab.id], folder, tab.windowId);
+    // Nella stessa scheda ricordo che nasce da Deskly: se torna alla nuova scheda (Indietro) esce dal gruppo.
+    if (sameTab && from) await markOrigin(from.id);
+  }
 }
 
-// Se una scheda dentro un gruppo creato da Deskly torna alla nuova scheda (es. col tasto Indietro), esce dal gruppo.
-const NEWTAB_URLS = [chrome.runtime.getURL('newtab.html'), 'chrome://newtab/'];
+// Schede di Deskly finite in un gruppo per aver aperto un link nella stessa scheda: tabId -> istante.
+// Solo queste escono dal gruppo al ritorno: una nuova scheda creata col "+" del gruppo resta dove l'utente l'ha messa.
+const ORIGINS = 'deskly-origins';
+const ORIGIN_GRACE = 3000;
+const NEWTAB_URLS = [chrome.runtime.getURL('newtab.html'), 'chrome://newtab', 'chrome://new-tab-page'];
+const isNewTab = (url) => Boolean(url) && NEWTAB_URLS.some((u) => url.startsWith(u));
+
+async function markOrigin(tabId) {
+  const map = (await chrome.storage.session.get(ORIGINS))[ORIGINS] || {};
+  map[tabId] = Date.now();
+  await chrome.storage.session.set({ [ORIGINS]: map });
+}
+
 chrome.tabs.onUpdated.addListener(async (tabId, change, tab) => {
   if (!change.url && change.status !== 'complete') return;
-  const url = tab.url || tab.pendingUrl || '';
-  if (tab.groupId == null || tab.groupId < 0 || !NEWTAB_URLS.some((u) => url.startsWith(u))) return;
+  if (tab.groupId == null || tab.groupId < 0) return;
+  // Durante la navigazione verso il link l'indirizzo attuale è ancora la nuova scheda: conta dove sta andando.
+  if (tab.pendingUrl && !isNewTab(tab.pendingUrl)) return;
+  if (!isNewTab(change.url || tab.url)) return;
   try {
-    const store = (await chrome.storage.session.get(GROUPS))[GROUPS] || {};
-    if (Object.values(store).includes(tab.groupId)) await chrome.tabs.ungroup(tabId);
+    const map = (await chrome.storage.session.get(ORIGINS))[ORIGINS] || {};
+    const at = map[tabId];
+    if (at == null || Date.now() - at < ORIGIN_GRACE) return;
+    delete map[tabId];
+    await chrome.storage.session.set({ [ORIGINS]: map });
+    await chrome.tabs.ungroup(tabId);
+  } catch {}
+});
+
+chrome.tabs.onRemoved.addListener(async (tabId) => {
+  try {
+    const map = (await chrome.storage.session.get(ORIGINS))[ORIGINS] || {};
+    if (map[tabId] == null) return;
+    delete map[tabId];
+    await chrome.storage.session.set({ [ORIGINS]: map });
   } catch {}
 });
 

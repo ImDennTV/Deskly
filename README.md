@@ -43,6 +43,8 @@ Le scorciatoie si possono cambiare in `chrome://extensions/shortcuts`.
 
 **Temi personalizzati** (Impostazioni → Aspetto): parti da un preset (Nord, Dracula, Rosé, Foresta, Oceano, Sabbia, Sakura, Menta) o crea il tuo scegliendo quattro colori; fino a 12 temi, duplicabili, esportabili e importabili come testo. Le **etichette** dei link si aggiungono con un selettore a icone, le **icone dei siti** sono in alta qualità (128 px) e il gruppo di schede di Chrome si scioglie da solo se torni indietro alla nuova scheda.
 
+**Disposizione e ordine** (Impostazioni → Pagina): scegli con anteprime il layout (griglia, solo icone, elenco, compatta), le colonne di cartelle (auto, 1–4), la dimensione delle icone e la larghezza. Cartelle e link si possono ordinare a mano, per nome, per numero di link o per uso/recenza (solo nella vista: il tuo ordine salvato non cambia), con i preferiti in cima e il numero di link visibili per cartella. In Aspetto scegli stile delle carte e forma delle icone (arrotondata, cerchio, quadrata); in Comportamento decidi se aprire i link nella stessa scheda.
+
 Impostazioni (icona ingranaggio), in cinque schede: **Aspetto** (tema, colore d'accento, font, stile delle carte, densità, angoli, lingua), **Sfondo** (aurora, sfumatura, tinta unita o una tua immagine, grana, effetti), **Pagina** (layout, dimensione delle tessere, larghezza, riquadro con logo e nome, orologio e data, sezioni da mostrare), **Comportamento** (raggruppamento schede, motore di ricerca, suggerimenti web e cronologia) e **Dati**.
 
 Il piede di pagina di Chrome («Personalizza Chrome») non si può togliere da un'estensione: clic destro su di esso → nascondi.

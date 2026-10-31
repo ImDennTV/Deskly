@@ -1,5 +1,5 @@
 // Drag and drop nativo: riordino link, spostamento tra cartelle, riordino cartelle (dalla maniglia).
-export function initDnd(root, { get, moveLink, moveFolder, enabled }) {
+export function initDnd(root, { get, moveLink, moveFolder, enabled, sortedLinks = () => false }) {
   let drag = null;
 
   const clearMarks = () => {
@@ -36,6 +36,8 @@ export function initDnd(root, { get, moveLink, moveFolder, enabled }) {
   function locate(e) {
     if (drag.kind === 'link') {
       const row = e.target.closest?.('.link[data-link-id]');
+      // Con i link ordinati in automatico, riordinare dentro la stessa cartella non avrebbe effetto visibile.
+      if (row && sortedLinks() && row.closest('.folder').contains(root.querySelector(`.link[data-link-id="${CSS.escape(drag.id)}"]`))) return null;
       if (row && row.dataset.linkId !== drag.id) {
         const r = row.getBoundingClientRect();
         // Le tessere stanno in griglia: contano le colonne, non le righe.

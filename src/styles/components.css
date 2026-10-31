@@ -89,6 +89,10 @@ kbd, .kbd { font: 500 10.5px/1 var(--mono); padding: 4px 6px; border-radius: 6px
 /* Icone tutte bianche o tutte nere: una piastra di tono opposto le rende leggibili (GitHub, Cloudflare Pages...). */
 .fav[data-tone="light"] { background: #1c1d21; }
 .fav[data-tone="dark"] { background: #f4f4f6; }
+/* Icona quadrata che riempie tutto: la piastra prende il colore del suo bordo e sparisce. */
+.fav[data-tone="full"] { background: var(--plate, var(--fav-bg)); }
+.fav[data-tone="full"]:not([data-res="lo"]) img { width: 100%; height: 100%; border-radius: 0; }
+.fav[data-res="lo"] img { width: 14px; height: 14px; }
 .siteico { border-radius: 4px; object-fit: contain; flex: none; }
 .siteico.is-empty { opacity: 0; }
 .siteico[data-tone="light"] { background: #1c1d21; padding: 1px; }
