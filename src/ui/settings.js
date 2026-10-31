@@ -52,6 +52,16 @@ export function openSettings() {
     if (list.length >= MAX_CUSTOM_THEMES) return toast(t('toast.themeLimit'));
     const c = newTheme(base);
     saveThemes([...list, c], { theme: CUSTOM_PREFIX + c.id, accent: c.accent });
+    // Il nuovo tema parte con i colori di quello in uso: senza questo non si vedrebbe nulla.
+    toast(t('toast.themeCreated'));
+    setTimeout(() => {
+      const ed = document.querySelector('.themeedit');
+      if (!ed) return;
+      ed.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      ed.classList.add('themeedit--new');
+      const name = ed.querySelector('input[type=text]');
+      if (name) name.focus({ preventScroll: true }), name.select();
+    }, 60);
   };
   const editTheme = (id, patch, extra = {}) => saveThemes(cur().customThemes.map((x) => (x.id === id ? { ...x, ...patch } : x)), extra);
 

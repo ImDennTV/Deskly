@@ -221,6 +221,10 @@ html[data-ishape="circle"] .link--tile .ltile__ico .fav[data-tone="full"]:not([d
 .themebox { display: grid; gap: 14px; margin-top: 4px; }
 .themebox .themes { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); }
 .themeedit { display: grid; gap: 10px; padding: 12px 14px; border-radius: var(--r-lg); border: 1px solid var(--line); background: var(--field); }
+.themeedit { scroll-margin-top: 70px; }
+.themeedit--new { animation: themeedit-in .9s ease-out; }
+@keyframes themeedit-in { 0% { box-shadow: 0 0 0 3px var(--accent); } 100% { box-shadow: 0 0 0 3px transparent; } }
+@media (prefers-reduced-motion: reduce) { .themeedit--new { animation: none; } }
 .theme-card--add { border-style: dashed; color: var(--text-2); }
 .theme-card--add:disabled { opacity: 0.45; pointer-events: none; }
 .theme-card--add .theme-card__pv { place-items: center; align-content: center; background: transparent; border-color: var(--line); color: var(--text-3); }
