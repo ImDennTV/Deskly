@@ -114,8 +114,21 @@ async function openLink({ url, background = false, folderId = null, sameTab = fa
   let tab;
   if (sameTab && from) tab = await chrome.tabs.update(from.id, { url: target });
   else tab = await chrome.tabs.create({ url: target, active: !background, windowId: from?.windowId });
-  if (groupOnOpen && folder && tab) await groupTabs([tab.id], folder, tab.windowId);
+  // Nella stessa scheda non si raggruppa: la scheda di Deskly resterebbe nel gruppo anche tornando indietro.
+  if (groupOnOpen && folder && tab && !(sameTab && from)) await groupTabs([tab.id], folder, tab.windowId);
 }
+
+// Se una scheda dentro un gruppo creato da Deskly torna alla nuova scheda (es. col tasto Indietro), esce dal gruppo.
+const NEWTAB_URLS = [chrome.runtime.getURL('newtab.html'), 'chrome://newtab/'];
+chrome.tabs.onUpdated.addListener(async (tabId, change, tab) => {
+  if (!change.url && change.status !== 'complete') return;
+  const url = tab.url || tab.pendingUrl || '';
+  if (tab.groupId == null || tab.groupId < 0 || !NEWTAB_URLS.some((u) => url.startsWith(u))) return;
+  try {
+    const store = (await chrome.storage.session.get(GROUPS))[GROUPS] || {};
+    if (Object.values(store).includes(tab.groupId)) await chrome.tabs.ungroup(tabId);
+  } catch {}
+});
 
 async function openFolder({ folderId }, sender) {
   const doc = await loadDoc();

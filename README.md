@@ -35,10 +35,13 @@ Le scorciatoie si possono cambiare in `chrome://extensions/shortcuts`.
 ## Ricerca e suggerimenti
 
 - La barra della nuova scheda funziona come quella di Chrome: mentre scrivi mostra le tue cartelle, la cronologia e i suggerimenti web. Invio apre il primo risultato o cerca sul web.
+- Sotto la barra c'è la prima riga «testo – Ricerca Google», poi i completamenti (la parte che hai già scritto resta normale, il resto è in grassetto) e, quando Google lo propone, i siti con la loro icona. Con Google o Chrome come motore c'è anche il pulsante **AI Mode** (o **Alt+Invio**) che apre la ricerca in modalità AI di Google. Le foto e i sottotitoli dei risultati "entità" (come nella barra di Chrome) non sono disponibili per le estensioni: restano solo testo e icona.
 - Quando aggiungi un link basta scrivere una parola ("terminal"): Deskly la cerca nella cronologia e ti propone l'indirizzo giusto.
 - «Suggeriti per te» propone i siti che visiti di più e che non hai ancora salvato; «Organizza i miei siti» li divide per categoria in cartelle.
 
 ## Personalizzazione
+
+**Temi personalizzati** (Impostazioni → Aspetto): parti da un preset (Nord, Dracula, Rosé, Foresta, Oceano, Sabbia, Sakura, Menta) o crea il tuo scegliendo quattro colori; fino a 12 temi, duplicabili, esportabili e importabili come testo. Le **etichette** dei link si aggiungono con un selettore a icone, le **icone dei siti** sono in alta qualità (128 px) e il gruppo di schede di Chrome si scioglie da solo se torni indietro alla nuova scheda.
 
 Impostazioni (icona ingranaggio), in cinque schede: **Aspetto** (tema, colore d'accento, font, stile delle carte, densità, angoli, lingua), **Sfondo** (aurora, sfumatura, tinta unita o una tua immagine, grana, effetti), **Pagina** (layout, dimensione delle tessere, larghezza, riquadro con logo e nome, orologio e data, sezioni da mostrare), **Comportamento** (raggruppamento schede, motore di ricerca, suggerimenti web e cronologia) e **Dati**.
 
@@ -47,7 +50,7 @@ Il piede di pagina di Chrome («Personalizza Chrome») non si può togliere da u
 ## Backup e condivisione
 
 - **Esporta / Importa** (Impostazioni → Dati): un file JSON con tutte le cartelle. È il modo più semplice per mandare la tua configurazione a un collega, che la importa dopo aver installato Deskly.
-- I dati restano sul tuo computer in `chrome.storage.local`. Le uniche richieste in rete sono due, entrambe spegnibili: i suggerimenti web di Google mentre scrivi nella barra (Impostazioni → Comportamento; viene inviato solo il testo digitato) e il controllo degli aggiornamenti su GitHub (Impostazioni → Dati → Aggiornamenti; non viene inviato nulla).
+- I dati restano sul tuo computer in `chrome.storage.local`. Le uniche richieste in rete sono tre, tutte spegnibili: i suggerimenti web di Google mentre scrivi nella barra (Impostazioni → Comportamento; viene inviato solo il testo digitato), le icone ad alta qualità dei siti (servizio favicon di Google: viene inviato solo il dominio del sito; si spegne in Impostazioni → Comportamento, e Chrome usa le sue icone locali) e il controllo degli aggiornamenti su GitHub (Impostazioni → Dati → Aggiornamenti; non viene inviato nulla).
 
 ## Permessi
 
@@ -61,6 +64,7 @@ Il piede di pagina di Chrome («Personalizza Chrome») non si può togliere da u
 | `history`, `topSites` | cercare nella cronologia e proporti i siti più visitati (restano in locale) |
 | `search` | cercare con il motore predefinito di Chrome |
 | host `suggestqueries.google.com` | suggerimenti web mentre scrivi |
+| host `t3.gstatic.com` | icone dei siti ad alta qualità (solo il dominio) |
 | host `api.github.com` | sapere se esiste una versione più recente (solo lettura, nessun dato inviato) |
 | `bookmarks` (opzionale) | solo se importi i preferiti; viene chiesto in quel momento |
 

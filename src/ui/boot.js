@@ -15,6 +15,7 @@
       var img = localStorage.getItem('deskly-bg');
       if (img) d.style.setProperty('--bg-image', 'url("' + img + '")');
     }
+    if (b.vars) for (var v in b.vars) d.style.setProperty(v, b.vars[v]);
     if (b.accent) {
       d.style.setProperty('--accent', b.accent);
       d.style.setProperty('--accent-ink', b.ink || '#ffffff');

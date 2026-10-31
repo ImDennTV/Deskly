@@ -15,7 +15,11 @@ export function searchUrl(id, query) {
   return e.url.replace('%s', encodeURIComponent(query.trim()));
 }
 
-const SVG_NS = 'http://www.w3.org/2000/svg';
+// "AI Mode" è una funzione di Google: ha senso solo con Google o con il motore di Chrome.
+export const hasAiMode = (id) => id === 'google' || id === 'chrome';
+export const aiModeUrl = (query) => `https://www.google.com/search?q=${encodeURIComponent(query.trim())}&udm=50`;
+
+const SVG_NS ='http://www.w3.org/2000/svg';
 
 const MARKS = {
   chrome: '<path fill="#EA4335" d="M24 24L4.95 13A22 22 0 0 1 43.05 13Z"/><path fill="#FBBC04" d="M24 24L43.05 13A22 22 0 0 1 24 46Z"/><path fill="#34A853" d="M24 24L24 46A22 22 0 0 1 4.95 13Z"/><circle cx="24" cy="24" r="10.5" fill="#fff"/><circle cx="24" cy="24" r="8" fill="#4285F4"/>',

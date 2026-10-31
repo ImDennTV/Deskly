@@ -1,11 +1,15 @@
 import { readableOn } from '../core/colors.js';
+import { findCustomTheme, baseThemeOf, themeVars } from '../core/themes.js';
 
 const mq = matchMedia('(prefers-color-scheme: light)');
 const BG_KEY = 'deskly-bg';
 let current = null;
 
+const BUILTIN = ['midnight', 'carbon', 'paper', 'ember', 'violet'];
+let appliedVars = [];
+
 export function resolveTheme(theme) {
-  if (theme && theme !== 'auto') return theme;
+  if (BUILTIN.includes(theme)) return theme;
   return mq.matches ? 'paper' : 'midnight';
 }
 
@@ -58,9 +62,15 @@ export function applyTheme(settings) {
   current = settings;
   const root = document.documentElement;
   const d = root.dataset;
-  const theme = resolveTheme(settings.theme);
+  const custom = findCustomTheme(settings);
+  const theme = custom ? baseThemeOf(custom) : resolveTheme(settings.theme);
   const ink = readableOn(settings.accent);
   d.theme = theme;
+  // Un tema personalizzato è un tema di base più i suoi colori, applicati come variabili sulla radice.
+  appliedVars.forEach((k) => root.style.removeProperty(k));
+  const vars = custom ? themeVars(custom) : {};
+  appliedVars = Object.keys(vars);
+  for (const [k, v] of Object.entries(vars)) root.style.setProperty(k, v);
   d.density = settings.density;
   d.radius = settings.radius;
   d.font = settings.font;
@@ -84,7 +94,7 @@ export function applyTheme(settings) {
   document.body.dataset.layout = settings.newtabLayout;
   try {
     localStorage.setItem('deskly-boot', JSON.stringify({
-      theme: settings.theme, accent: settings.accent, ink, density: settings.density, radius: settings.radius,
+      theme: custom ? theme : settings.theme, vars, accent: settings.accent, ink, density: settings.density, radius: settings.radius,
       font: settings.font, hfont: settings.heroFont, card: settings.cardStyle, tile: settings.tileSize, width: settings.pageWidth,
       aurora: settings.auroraLevel, dim: settings.bgDim, grain: settings.grain, fx: settings.effects, blur: settings.bgBlur, bg: d.bg,
     }));

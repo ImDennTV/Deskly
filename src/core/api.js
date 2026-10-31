@@ -186,15 +186,50 @@ export const searchApi = {
   },
 };
 
-// Suggerimenti web in tempo reale (gli stessi della barra di Chrome).
+const SUGGEST_MAX = 7;
+
+// Suggerimenti web in tempo reale, gli stessi della barra di Chrome: ricerche ({ kind: 'query', text })
+// e siti ({ kind: 'nav', url, title }), già in ordine di rilevanza.
+// L'endpoint pubblico non manda foto né sottotitoli delle "entità": quelli li ha solo Chrome.
 export async function webSuggest(text, lang = 'it', signal) {
   const q = text.trim();
   if (!q) return [];
-  if (!isExt) return [`${q} online`, `${q} gratis`, `${q} come si usa`, `${q} 2026`];
+  if (!isExt) {
+    const slug = q.toLowerCase().replace(/[^a-z0-9]+/g, '');
+    return [
+      { kind: 'query', text: `${q} online` },
+      slug ? { kind: 'nav', url: `https://${slug}.com/`, title: `${q} · sito ufficiale` } : null,
+      { kind: 'query', text: `${q} gratis` },
+      { kind: 'query', text: `${q} come si usa` },
+      { kind: 'query', text: `${q} 2026` },
+    ].filter(Boolean);
+  }
   try {
-    const r = await fetch(`https://suggestqueries.google.com/complete/search?client=firefox&hl=${encodeURIComponent(lang)}&q=${encodeURIComponent(q)}`, { signal });
-    const data = await r.json();
-    return Array.isArray(data?.[1]) ? data[1].filter((s) => typeof s === 'string' && s.toLowerCase() !== q.toLowerCase()).slice(0, 5) : [];
+    const r = await fetch(`https://suggestqueries.google.com/complete/search?client=chrome&hl=${encodeURIComponent(lang)}&q=${encodeURIComponent(q)}`, { signal });
+    // Con questo client la risposta può non essere UTF-8: la leggo con il charset dichiarato.
+    const charset = /charset=([\w-]+)/i.exec(r.headers.get('content-type') || '')?.[1];
+    let decoder;
+    try {
+      decoder = new TextDecoder(charset || 'utf-8');
+    } catch {
+      decoder = new TextDecoder();
+    }
+    const data = JSON.parse(decoder.decode(await r.arrayBuffer()));
+    const list = Array.isArray(data?.[1]) ? data[1] : [];
+    const titles = Array.isArray(data?.[2]) ? data[2] : [];
+    const types = data?.[4]?.['google:suggesttype'];
+    const rank = data?.[4]?.['google:suggestrelevance'];
+    const out = [];
+    list.forEach((s, i) => {
+      if (typeof s !== 'string' || !s.trim()) return;
+      const score = Array.isArray(rank) && typeof rank[i] === 'number' ? rank[i] : -i;
+      if (types?.[i] === 'NAVIGATION' || /^https?:\/\//i.test(s)) {
+        const url = /^https?:\/\//i.test(s) ? s : `https://${s}`;
+        if (!/^https?:\/\/[^\s]+$/i.test(url)) return;
+        out.push({ kind: 'nav', url, title: typeof titles[i] === 'string' ? titles[i] : '', score });
+      } else if (s.toLowerCase() !== q.toLowerCase()) out.push({ kind: 'query', text: s, score });
+    });
+    return out.sort((a, b) => b.score - a.score).slice(0, SUGGEST_MAX).map(({ score, ...x }) => x);
   } catch {
     return [];
   }

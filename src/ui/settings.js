@@ -8,6 +8,7 @@ import { THEME_PREVIEW, hasBackgroundImage, setBackgroundImage, clearBackgroundI
 import { importBookmarks, openSmartImport } from './importer.js';
 import { ENGINES, ENGINE_IDS } from './engines.js';
 import { checkForUpdate } from '../core/updates.js';
+import { THEME_PRESETS, CUSTOM_PREFIX, MAX_CUSTOM_THEMES, findCustomTheme, newTheme, sanitizeCustomThemes } from '../core/themes.js';
 
 const THEMES = ['auto', 'midnight', 'carbon', 'paper', 'ember', 'violet'];
 const TABS = ['look', 'bg', 'page', 'behavior', 'data'];
@@ -34,6 +35,105 @@ export function openSettings() {
   const tog = (s, key, title, desc) => row(t(title), desc ? t(desc) : null, toggle(s[key], t(title), (v) => set({ [key]: v })));
   const pick = (s, key, title, opts, desc) => row(t(title), desc ? t(desc) : null, seg(opts.map(([v, k]) => [v, t(k)]), s[key], (v) => set({ [key]: v })));
 
+  // ---- Temi personalizzati: carte, galleria, editor dei 4 colori, import/export ----
+  const cur = () => store.get().settings;
+  const saveThemes = (list, extra = {}) => set({ customThemes: list, ...extra });
+  const useTheme = (c) => set({ theme: CUSTOM_PREFIX + c.id, accent: c.accent });
+  const addTheme = (base) => {
+    const list = cur().customThemes;
+    if (list.length >= MAX_CUSTOM_THEMES) return toast(t('toast.themeLimit'));
+    const c = newTheme(base);
+    saveThemes([...list, c], { theme: CUSTOM_PREFIX + c.id, accent: c.accent });
+  };
+  const editTheme = (id, patch, extra = {}) => saveThemes(cur().customThemes.map((x) => (x.id === id ? { ...x, ...patch } : x)), extra);
+
+  async function removeTheme(c) {
+    const ok = await confirmDialog({ title: t('set.themeDelete'), message: t('set.themeDeleteConfirm', { n: c.name }), confirmLabel: t('set.themeDelete') });
+    if (!ok) return;
+    const s = cur();
+    saveThemes(s.customThemes.filter((x) => x.id !== c.id), s.theme === CUSTOM_PREFIX + c.id ? { theme: 'auto' } : {});
+  }
+
+  async function exportTheme(c) {
+    const { id, ...rest } = c;
+    const code = JSON.stringify({ 'deskly-theme': 1, ...rest });
+    try {
+      await navigator.clipboard.writeText(code);
+      toast(t('toast.themeCopied'));
+    } catch {
+      downloadFile(`deskly-tema-${c.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'tema'}.json`, code);
+    }
+  }
+
+  function importThemeDialog() {
+    const area = h('textarea', { class: 'textarea', rows: 5, placeholder: '{"deskly-theme":1,…}', spellcheck: false, 'aria-label': t('set.themeImport') });
+    const m = modal({
+      title: t('set.themeImport'),
+      body: h('div', { style: { display: 'grid', gap: '10px' } }, h('p', { class: 'muted' }, t('set.themeImportHint')), area),
+      footer: [
+        h('span', { class: 'spacer' }),
+        h('button', { class: 'btn btn--ghost', type: 'button', onclick: () => m.close() }, t('common.cancel')),
+        h('button', {
+          class: 'btn btn--primary', type: 'button',
+          onclick: () => {
+            try {
+              const [parsed] = sanitizeCustomThemes([JSON.parse(area.value.trim())]);
+              if (!parsed) throw new Error('theme');
+              addTheme(parsed);
+              m.close();
+              toast(t('toast.themeImported'));
+            } catch {
+              toast(t('toast.themeBad'));
+            }
+          },
+        }, t('common.add')),
+      ],
+    });
+    area.focus();
+  }
+
+  const themesGroup = (s) => {
+    const active = findCustomTheme(s);
+    const card = (c) => h('button', {
+      class: 'theme-card', type: 'button', 'aria-pressed': s.theme === CUSTOM_PREFIX + c.id ? 'true' : 'false',
+      style: { '--p-bg': c.bg, '--p-surface': c.surface, '--p-line': `color-mix(in srgb, ${c.text} 18%, ${c.surface})`, '--p-accent': c.accent },
+      onclick: () => useTheme(c),
+    }, h('div', { class: 'theme-card__pv' }, h('i'), h('i'), h('i')), h('span', null, c.name));
+    const dark = !matchMedia('(prefers-color-scheme: light)').matches;
+    const swatchOf = (p) => h('button', {
+      class: 'preset', type: 'button', title: p.name, 'aria-label': p.name,
+      style: { '--p-bg': p.bg, '--p-surface': p.surface, '--p-accent': p.accent, '--p-text': p.text },
+      onclick: () => addTheme(p),
+    }, h('i'), h('span', null, p.name));
+    const colorRow = (c, key, label) => row(label, null, h('input', {
+      class: 'colorpick', type: 'color', value: c[key], 'aria-label': label,
+      oninput: (e) => editTheme(c.id, { [key]: normalizeHex(e.target.value) }, key === 'accent' ? { accent: normalizeHex(e.target.value) } : {}),
+    }));
+    return h('div', { class: 'themebox' },
+      h('div', { class: 'setrow setrow--stack' },
+        h('span', { class: 'label' }, t('set.themeMine')),
+        h('div', { class: 'themes' },
+          s.customThemes.map(card),
+          h('button', { class: 'theme-card theme-card--add', type: 'button', onclick: () => addTheme(THEME_PRESETS.find((p) => (p.mode === 'dark') === dark)), disabled: s.customThemes.length >= MAX_CUSTOM_THEMES },
+            h('div', { class: 'theme-card__pv' }, icon('plus', { size: 18 })), h('span', null, t('set.themeNew'))))),
+      active ? h('div', { class: 'themeedit' },
+        row(t('set.themeName'), null, h('input', { class: 'input input--auto', type: 'text', value: active.name, maxlength: 24, autocomplete: 'off', 'aria-label': t('set.themeName'), onchange: (e) => editTheme(active.id, { name: e.target.value.trim() || active.name }) })),
+        row(t('set.themeMode'), null, seg([['dark', t('mode.dark')], ['light', t('mode.light')]], active.mode, (v) => editTheme(active.id, { mode: v }))),
+        colorRow(active, 'bg', t('set.themeBg')),
+        colorRow(active, 'surface', t('set.themeSurface')),
+        colorRow(active, 'text', t('set.themeText')),
+        colorRow(active, 'accent', t('set.themeAccent')),
+        h('div', { class: 'data-actions' },
+          h('button', { class: 'btn', type: 'button', onclick: () => addTheme({ ...active, name: `${active.name} 2`.slice(0, 24) }) }, icon('copy', { size: 15 }), t('set.themeDup')),
+          h('button', { class: 'btn', type: 'button', onclick: () => exportTheme(active) }, icon('share-2', { size: 15 }), t('set.themeExport')),
+          h('button', { class: 'btn btn--ghost btn--danger', type: 'button', onclick: () => removeTheme(active) }, icon('trash-2', { size: 15 }), t('set.themeDelete')))) : null,
+      h('div', { class: 'setrow setrow--stack' },
+        h('span', { class: 'label' }, t('set.themeGallery')),
+        h('div', { class: 'presets' }, THEME_PRESETS.map(swatchOf)),
+        h('div', { class: 'data-actions' }, h('button', { class: 'btn', type: 'button', onclick: importThemeDialog }, icon('upload', { size: 15 }), t('set.themeImport')))),
+    );
+  };
+
   const lookTab = (s) => {
     const themeCard = (id) => {
       const p = THEME_PREVIEW[id === 'auto' ? (matchMedia('(prefers-color-scheme: light)').matches ? 'paper' : 'midnight') : id];
@@ -49,6 +149,7 @@ export function openSettings() {
       h('section', { class: 'setgroup' },
         h('h3', null, t('settings.appearance')),
         h('div', { class: 'themes' }, THEMES.map(themeCard)),
+        themesGroup(s),
         h('div', { class: 'setrow setrow--stack' }, h('span', { class: 'label' }, t('settings.accent')),
           h('div', { class: 'swatches' },
             FOLDER_COLORS.map((c) => h('button', { class: 'swatch', type: 'button', style: { '--c': c.hex }, 'aria-label': c.id, 'aria-pressed': s.accent === c.hex ? 'true' : 'false', onclick: () => set({ accent: c.hex }) })),
@@ -133,6 +234,7 @@ export function openSettings() {
       tog(s, 'groupOnOpen', 'settings.groupOnOpen', 'settings.groupOnOpenHint'),
       tog(s, 'focusExisting', 'settings.focusExisting'),
       tog(s, 'favicons', 'settings.favicons'),
+      s.favicons ? tog(s, 'hiResIcons', 'set.hiIcons', 'set.hiIconsHint') : null,
     ),
     h('section', { class: 'setgroup' },
       h('h3', null, t('set.search')),

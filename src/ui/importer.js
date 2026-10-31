@@ -1,7 +1,8 @@
 import { h, icon } from '../core/dom.js';
 import { t, getLang } from '../core/i18n.js';
 import * as store from '../core/store.js';
-import { bookmarksApi, faviconUrl } from '../core/api.js';
+import { bookmarksApi } from '../core/api.js';
+import { iconImg } from '../core/favicons.js';
 import { foldersFromBookmarks, sanitizeFolder, hostOf } from '../core/model.js';
 import { CATEGORIES, categoryName, findSite } from '../core/catalog.js';
 import { frequentSites } from '../core/suggest.js';
@@ -102,7 +103,7 @@ export function openSmartImport({ onDone } = {}) {
         });
         const label = h('label', { class: 'imp__row' },
           input,
-          h('img', { class: 'imp__fav', src: faviconUrl(s.url, 32), alt: '', width: 18, height: 18, loading: 'lazy' }),
+          iconImg(s.url, { cls: 'imp__fav' }),
           h('span', { class: 'imp__name truncate' }, s.title),
           h('span', { class: 'imp__host truncate' }, hostOf(s.url).replace(/^www\./, '')),
         );

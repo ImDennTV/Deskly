@@ -6,7 +6,7 @@ import { suggestSites } from '../core/suggest.js';
 import { CATEGORIES, categoryName } from '../core/catalog.js';
 import { getLang } from '../core/i18n.js';
 import { FOLDER_COLORS, TAG_SUGGESTIONS, tagColor, normalizeHex } from '../core/colors.js';
-import { faviconUrl } from '../core/api.js';
+import { iconImg } from '../core/favicons.js';
 import { modal } from './kit.js';
 import { folderTile } from './folders.js';
 
@@ -21,20 +21,42 @@ export function openLinkEditor({ link, folderId, prefill = {}, onDone } = {}) {
   const title = h('input', { class: 'input', id: 'le-title', value: current.title, placeholder: t('link.titlePh'), maxlength: 120, autocomplete: 'off' });
   const url = h('input', { class: 'input', id: 'le-url', value: current.url || '', placeholder: t('link.urlPh'), autocomplete: 'off', spellcheck: false, inputmode: 'url', role: 'combobox', 'aria-expanded': 'false' });
   const note = h('textarea', { class: 'textarea', id: 'le-note', placeholder: t('link.notePh'), maxlength: 300 }, current.note || '');
-  const tag = h('input', { class: 'input', id: 'le-tag', value: current.tag || '', placeholder: t('link.tagPh'), maxlength: 24, autocomplete: 'off' });
   const select = h('select', { class: 'select', id: 'le-folder' }, state.folders.map((f) => h('option', { value: f.id, selected: f.id === startFolder }, f.name)));
   const urlHint = h('span', { class: 'hint' });
   const lead = h('span', { class: 'lead' });
-  const tagRow = h('div', { class: 'tagrow' });
 
+  // Etichetta: una sola, scelta tra quelle già usate (le più frequenti per prime), i suggerimenti o una nuova.
+  let tagValue = (current.tag || '').trim();
+  const tagOptions = () => {
+    const counts = new Map();
+    for (const f of store.get().folders) for (const l of f.links) if (l.tag) counts.set(l.tag, (counts.get(l.tag) || 0) + 1);
+    const used = [...counts].sort((a, b) => b[1] - a[1]).map(([name]) => name).slice(0, 8);
+    const all = [...used, ...TAG_SUGGESTIONS.filter((s) => !used.some((u) => u.toLowerCase() === s))];
+    if (tagValue && !all.some((x) => x.toLowerCase() === tagValue.toLowerCase())) all.unshift(tagValue);
+    return all;
+  };
+  const tagChips = h('div', { class: 'tagpick__chips' });
+  const tagInput = h('input', { class: 'tagpick__input', id: 'le-tag', placeholder: t('link.tagNew'), maxlength: 24, autocomplete: 'off', 'aria-label': t('link.tag') });
+  const tagBox = h('div', { class: 'tagpick' }, tagChips, tagInput);
+  const commitTag = () => {
+    const v = tagInput.value.trim().slice(0, 24);
+    tagInput.value = '';
+    if (v) { tagValue = v; renderTags(); }
+  };
+  tagInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); commitTag(); }
+    else if (e.key === 'Backspace' && !tagInput.value && tagValue) { tagValue = ''; renderTags(); }
+  });
+  tagInput.addEventListener('blur', commitTag);
   const renderTags = () => {
-    const cur = tag.value.trim().toLowerCase();
-    mount(tagRow, TAG_SUGGESTIONS.map((s) => h('button', {
-      type: 'button',
-      style: { '--bc': tagColor(s) },
-      'aria-pressed': cur === s ? 'true' : 'false',
-      onclick: () => { tag.value = cur === s ? '' : s; renderTags(); },
-    }, s)));
+    const cur = tagValue.toLowerCase();
+    mount(tagChips, tagOptions().map((s) => {
+      const on = cur === s.toLowerCase();
+      return h('button', {
+        type: 'button', class: 'tagchip', style: { '--bc': tagColor(s) }, 'aria-pressed': on ? 'true' : 'false',
+        onclick: () => { tagValue = on ? '' : s; renderTags(); },
+      }, h('i', { 'aria-hidden': 'true' }), s);
+    }));
   };
 
   let pendingFav = '';
@@ -51,10 +73,10 @@ export function openLinkEditor({ link, folderId, prefill = {}, onDone } = {}) {
       const dup = store.folderOfUrl(n);
       if (dup && dup.link.id !== link?.id && dup.folder.id === select.value) urlHint.textContent = t('add.alreadyThere');
     }
-    const next = n && /^https?:/.test(n) ? faviconUrl(n, 32) : '';
+    const next = n && /^https?:/.test(n) ? n : '';
     if (next !== pendingFav) {
       pendingFav = next;
-      mount(lead, next ? h('img', { src: next, width: 16, height: 16, alt: '', style: { borderRadius: '3px' }, onerror: (e) => e.target.replaceWith(icon('globe', { size: 16 })) }) : icon('globe', { size: 16 }));
+      mount(lead, next ? iconImg(next, { size: 16 }) : icon('globe', { size: 16 }));
     }
     title.placeholder = n && !title.value ? hostOf(n).replace(/^www\./, '') : t('link.titlePh');
   };
@@ -94,7 +116,7 @@ export function openLinkEditor({ link, folderId, prefill = {}, onDone } = {}) {
       onmousemove: () => { if (sel !== i) { sel = i; paintSel(); } },
       onclick: () => pick(hit),
     },
-    h('img', { src: faviconUrl(hit.url, 32), width: 18, height: 18, alt: '', style: { borderRadius: '4px' } }),
+    iconImg(hit.url, { size: 18 }),
     h('span', { class: 'suggest__main' },
       h('span', { class: 'suggest__title truncate' }, hit.title),
       h('span', { class: 'suggest__url truncate' }, hit.url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, ''))),
@@ -133,7 +155,6 @@ export function openLinkEditor({ link, folderId, prefill = {}, onDone } = {}) {
     }
   });
   select.addEventListener('change', refreshUrl);
-  tag.addEventListener('input', renderTags);
 
   const submit = (e) => {
     e?.preventDefault();
@@ -147,7 +168,7 @@ export function openLinkEditor({ link, folderId, prefill = {}, onDone } = {}) {
       title: title.value.trim() || hostOf(n).replace(/^www\./, ''),
       url: n,
       note: note.value.trim() || undefined,
-      tag: tag.value.trim() || undefined,
+      tag: (tagInput.value.trim() || tagValue) || undefined,
     };
     let saved;
     if (editing) {
@@ -165,7 +186,7 @@ export function openLinkEditor({ link, folderId, prefill = {}, onDone } = {}) {
       h('div', { class: 'input-wrap input-wrap--suggest' }, lead, url, drop), urlHint),
     h('div', { class: 'field' }, h('label', { for: 'le-title' }, t('link.title')), title, h('span', { class: 'hint' }, t('link.autoTitle'))),
     h('div', { class: 'field' }, h('label', { for: 'le-folder' }, t('link.folder')), select),
-    h('div', { class: 'field' }, h('label', { for: 'le-tag' }, t('link.tag')), tagRow, tag),
+    h('div', { class: 'field' }, h('label', { for: 'le-tag' }, t('link.tag')), tagBox),
     h('details', { class: 'adv', open: Boolean(current.note) },
       h('summary', null, icon('chevron-right', { size: 14 }), t('settings.advanced')),
       h('div', { class: 'adv__body' }, h('div', { class: 'field' }, h('label', { for: 'le-note' }, t('link.note')), note)),

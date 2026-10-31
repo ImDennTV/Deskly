@@ -1,7 +1,8 @@
 import { h, icon, mount, modKey } from '../core/dom.js';
 import { t, setLang, applyStatic, greeting, getLang } from '../core/i18n.js';
 import * as store from '../core/store.js';
-import { isExt, tabsApi, searchApi, faviconUrl } from '../core/api.js';
+import { isExt, tabsApi, searchApi } from '../core/api.js';
+import { iconImg, configureIcons, preloadIcons } from '../core/favicons.js';
 import { searchUrl } from './engines.js';
 import { foldersFromTabs, normalizeUrl } from '../core/model.js';
 import { applyTheme } from './theme.js';
@@ -398,7 +399,7 @@ function paintSuggestions() {
   };
   const chips = list.map((x) => h('span', { class: 'sugg' },
     h('button', { class: 'sugg__add', type: 'button', title: t('sugg.addTo', { name: categoryName(x.cat, lang) }), onclick: () => add(x) },
-      h('img', { src: faviconUrl(x.url, 32), alt: '', width: 18, height: 18 }),
+      iconImg(x.url),
       h('span', { class: 'truncate' }, x.title),
       icon('plus', { size: 14, cls: 'plus' })),
     h('button', { class: 'sugg__x', type: 'button', title: t('sugg.hide'), 'aria-label': t('sugg.hide'), onclick: () => { skipHost(bareHost(x.url)); paintSuggestions(); } }, icon('x', { size: 12 })),
@@ -415,11 +416,12 @@ function paintSuggestions() {
 function syncAppearance() {
   const s = store.get().settings;
   setLang(s.lang);
+  configureIcons(s);
   applyTheme(s);
 }
 
 async function start() {
-  await store.init();
+  await Promise.all([store.init(), preloadIcons()]);
   const doc = store.get();
   if (!doc.meta.onboarded && doc.folders.length) store.completeOnboarding([], t);
   syncAppearance();

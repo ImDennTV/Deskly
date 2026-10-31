@@ -114,7 +114,8 @@ html[data-fx="off"] .brand::after { display: none; }
 
 /* ---------- Dettagli ---------- */
 .nt-top__actions { margin-left: auto; }
-.settings { min-height: 420px; align-content: start; }
+.settings { min-height: 420px; align-content: start; grid-auto-rows: max-content; }
+.settabs { flex-shrink: 0; min-height: max-content; }
 .settings .setrow { flex-wrap: wrap; }
 .settings .seg { max-width: 100%; }
 .empty__actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }

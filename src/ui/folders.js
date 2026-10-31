@@ -1,6 +1,6 @@
 import { h, icon } from '../core/dom.js';
 import { t } from '../core/i18n.js';
-import { faviconUrl } from '../core/api.js';
+import { cachedIcon, loadIcon } from '../core/favicons.js';
 import { displayUrl, hostOf } from '../core/model.js';
 import { tagColor } from '../core/colors.js';
 
@@ -17,10 +17,18 @@ export function favEl(link, { favicons = true, size = 32 } = {}) {
   const letter = (link.title || host || '?').trim().charAt(0);
   const fallback = () => h('span', { class: 'fav fav--letter', style: { '--fc': hue } }, letter);
   if (!favicons || !/^https?:/.test(link.url)) return fallback();
-  const holder = h('span', { class: 'fav' });
-  const img = h('img', { src: faviconUrl(link.url, size), alt: '', loading: 'lazy', decoding: 'async', draggable: false });
-  img.addEventListener('error', () => holder.replaceWith(fallback()), { once: true });
-  holder.append(img);
+  // Parte come lettera e diventa l'icona appena è pronta; se l'icona c'è già in cache compare subito.
+  const holder = fallback();
+  const show = (e) => {
+    const img = h('img', { src: e.src, alt: '', decoding: 'async', draggable: false });
+    img.addEventListener('error', () => { holder.className = 'fav fav--letter'; holder.removeAttribute('data-tone'); holder.replaceChildren(letter); }, { once: true });
+    holder.className = 'fav';
+    if (e.tone) holder.dataset.tone = e.tone;
+    holder.replaceChildren(img);
+  };
+  const hit = cachedIcon(link.url);
+  if (hit) show(hit);
+  else loadIcon(link.url).then((e) => e && show(e));
   return holder;
 }
 

@@ -4,8 +4,9 @@ import { search as runSearch, norm } from '../core/search.js';
 import { normalizeUrl, countLinks } from '../core/model.js';
 import { linkRow, folderTile } from './folders.js';
 import { menu } from './kit.js';
-import { ENGINES, ENGINE_IDS, engineMark } from './engines.js';
-import { webSuggest, faviconUrl } from '../core/api.js';
+import { ENGINES, ENGINE_IDS, engineMark, hasAiMode, aiModeUrl } from './engines.js';
+import { webSuggest } from '../core/api.js';
+import { iconImg } from '../core/favicons.js';
 import { suggestSites } from '../core/suggest.js';
 
 const URL_LIKE = /^(https?:\/\/\S+|[\w-]+(\.[\w-]+)+(:\d+)?([/?#]\S*)?)$/i;
@@ -51,20 +52,24 @@ export function createSearch({ placeholder, getState, ctx, commands, onActive, w
     clearBtn,
   );
   const results = h('div', { class: 'results', id: 'results', role: 'listbox', hidden: true });
-  const hints = h('div', { class: 'hints', hidden: true },
+  const hints = h('div', { class: 'hints', hidden: true });
+  // I suggerimenti dei tasti dipendono dal motore (AI Mode c'è solo con Google e Chrome).
+  const paintHints = () => hints.replaceChildren(
     h('span', null, h('kbd', { class: 'kbd' }, '↑↓'), t('palette.nav')),
     h('span', null, h('kbd', { class: 'kbd' }, '↵'), t('palette.open')),
     web ? h('span', null, h('kbd', { class: 'kbd' }, '⇧ ↵'), t('palette.web')) : null,
+    web && hasAiMode(web.getEngine()) ? h('span', null, h('kbd', { class: 'kbd' }, 'Alt ↵'), t('web.aiMode')) : null,
     h('span', null, h('kbd', { class: 'kbd' }, `${modKey} ↵`), t('palette.bg')),
     h('span', null, h('kbd', { class: 'kbd' }, 'esc'), t('palette.close')),
   );
+  paintHints();
 
   function engineMenu() {
     const current = web.getEngine();
     menu(engineBtn, ENGINE_IDS.map((id) => ({
       label: ENGINES[id].name,
       check: id === current,
-      onClick: () => { web.setEngine(id); paintEngine(); render(); input.focus(); },
+      onClick: () => { web.setEngine(id); paintEngine(); paintHints(); render(); input.focus(); },
     })));
   }
 
@@ -82,6 +87,21 @@ export function createSearch({ placeholder, getState, ctx, commands, onActive, w
     const term = text;
     if (!background) clear();
     web.search(term, { background });
+  }
+
+  function goAi(background) {
+    const term = q.trim();
+    if (!term || !hasAiMode(web.getEngine())) return;
+    if (!background) clear();
+    web.go(aiModeUrl(term), { background });
+  }
+
+  // Come la barra di Google: la parte già scritta resta normale, il completamento va in grassetto.
+  function completion(text, typed) {
+    if (text.toLowerCase().startsWith(typed.toLowerCase())) {
+      return [h('span', { class: 'typed typed--soft' }, text.slice(0, typed.length)), h('strong', null, text.slice(typed.length))];
+    }
+    return [text];
   }
 
   const prefs = () => web?.prefs?.() || {};
@@ -119,7 +139,7 @@ export function createSearch({ placeholder, getState, ctx, commands, onActive, w
     const asked = q.trim();
     const live = extra.q && (asked.startsWith(extra.q) || extra.q.startsWith(asked));
     const siteHits = live ? extra.sites : [];
-    const wordHits = live ? extra.words : [];
+    const suggestions = live ? extra.words : [];
 
     const nodes = [];
     const group = (label) => h('div', { class: 'section__title results__group' }, label);
@@ -170,7 +190,7 @@ export function createSearch({ placeholder, getState, ctx, commands, onActive, w
       nodes.push(group(t('search.fromHistory')));
       for (const site of siteHits) {
         const el = h('div', { class: 'cmd-row', tabindex: -1, onclick: (e) => { clear(); web.go(site.url, { background: e.ctrlKey || e.metaKey }); } },
-          h('span', { class: 'tile tile--mark' }, h('img', { src: faviconUrl(site.url, 32), width: 18, height: 18, alt: '', style: { borderRadius: '4px' } })),
+          h('span', { class: 'tile tile--mark' }, iconImg(site.url)),
           h('span', { class: 'grow truncate' }, site.title),
           h('span', { class: 'sub truncate' }, site.url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')),
           h('button', { class: 'ibtn', type: 'button', title: t('search.addSite'), 'aria-label': t('search.addSite'), onclick: (e) => { e.stopPropagation(); clear(); ctx.newLink({ url: site.url, title: site.title }); } }, icon('plus', { size: 16 })),
@@ -182,19 +202,36 @@ export function createSearch({ placeholder, getState, ctx, commands, onActive, w
     if (web) {
       const id = web.getEngine();
       nodes.push(group(t('palette.web')));
-      const el = h('button', { class: 'cmd-row', type: 'button', onclick: (e) => goWeb(e.ctrlKey || e.metaKey) },
+      // Prima riga come nella barra di Google: «testo – Ricerca Google», con il pulsante AI Mode.
+      const el = h('div', { class: 'cmd-row cmd-row--web', tabindex: -1, onclick: (e) => goWeb(e.ctrlKey || e.metaKey) },
         h('span', { class: 'tile tile--mark' }, engineMark(id, 18)),
-        h('span', { class: 'grow truncate' }, t('web.searchOn', { q: q.trim(), e: ENGINES[id].name })),
+        h('span', { class: 'grow truncate' },
+          h('span', { class: 'typed' }, asked),
+          h('span', { class: 'faint' }, ` – ${t('web.searchVia', { e: ENGINES[id].name })}`),
+        ),
+        hasAiMode(id)
+          ? h('button', { class: 'ai-pill', type: 'button', title: `${t('web.aiModeTip')} (Alt ↵)`, onclick: (e) => { e.stopPropagation(); goAi(e.ctrlKey || e.metaKey); } }, icon('sparkles', { size: 13 }), t('web.aiMode'))
+          : null,
         h('kbd', { class: 'kbd' }, '⇧ ↵'),
       );
       nodes.push(register({ type: 'web' }, el));
       webIdx = items.length - 1;
-      for (const word of wordHits) {
-        const sg = h('button', { class: 'cmd-row', type: 'button', onclick: (e) => goWeb(e.ctrlKey || e.metaKey, word) },
-          h('span', { class: 'tile' }, icon('search', { size: 16 })),
-          h('span', { class: 'grow truncate' }, word),
-        );
-        nodes.push(register({ type: 'word', word }, sg));
+      for (const sg of suggestions) {
+        if (sg.kind === 'nav') {
+          const shown = sg.url.replace(/^https?:\/\/(www\.)?/i, '').replace(/\/$/, '');
+          const row = h('button', { class: 'cmd-row', type: 'button', onclick: (e) => { if (!e.ctrlKey && !e.metaKey) clear(); web.go(sg.url, { background: e.ctrlKey || e.metaKey }); } },
+            h('span', { class: 'tile tile--mark' }, iconImg(sg.url)),
+            h('span', { class: 'grow truncate' }, sg.title || shown),
+            h('span', { class: 'sub truncate' }, shown),
+          );
+          nodes.push(register({ type: 'nav', url: sg.url }, row));
+        } else {
+          const row = h('button', { class: 'cmd-row', type: 'button', onclick: (e) => goWeb(e.ctrlKey || e.metaKey, sg.text) },
+            h('span', { class: 'tile' }, icon('search', { size: 16 })),
+            h('span', { class: 'grow truncate' }, ...completion(sg.text, asked)),
+          );
+          nodes.push(register({ type: 'word', word: sg.text }, row));
+        }
       }
     }
     if (cmds.length) {
@@ -237,12 +274,13 @@ export function createSearch({ placeholder, getState, ctx, commands, onActive, w
     cmd.run();
   }
 
-  function activate(background, forceWeb = false) {
+  function activate(background, forceWeb = false, ai = false) {
+    if (ai && web && q.trim()) return goAi(background);
     if (forceWeb && web && q.trim()) return goWeb(background);
     const it = items[active];
     if (!it) return;
     if (it.type === 'web') goWeb(background);
-    else if (it.type === 'url') {
+    else if (it.type === 'url' || it.type === 'nav') {
       if (!background) clear();
       web.go(it.url, { background });
     }
@@ -283,7 +321,7 @@ export function createSearch({ placeholder, getState, ctx, commands, onActive, w
       setActive((active + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length);
     } else if (e.key === 'Enter') {
       e.preventDefault();
-      activate(e.ctrlKey || e.metaKey, e.shiftKey);
+      activate(e.ctrlKey || e.metaKey, e.shiftKey, e.altKey);
     } else if (e.key === 'Escape') {
       if (q) {
         e.preventDefault();
