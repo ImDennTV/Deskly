@@ -7,6 +7,7 @@ import { modal, toast, confirmDialog } from './kit.js';
 import { THEME_PREVIEW, hasBackgroundImage, setBackgroundImage, clearBackgroundImage } from './theme.js';
 import { importBookmarks, openSmartImport } from './importer.js';
 import { ENGINES, ENGINE_IDS } from './engines.js';
+import { checkForUpdate } from '../core/updates.js';
 
 const THEMES = ['auto', 'midnight', 'carbon', 'paper', 'ember', 'violet'];
 const TABS = ['look', 'bg', 'page', 'behavior', 'data'];
@@ -143,9 +144,34 @@ export function openSettings() {
     ),
   ];
 
+  // Interruttore + stato: se c'è una versione nuova mostra «Scarica» e «Novità».
+  const updatesGroup = (s) => {
+    const status = h('div', { class: 'upd' });
+    const show = (info, checked) => {
+      if (info) {
+        status.replaceChildren(
+          h('strong', { class: 'upd__title' }, t('set.updateAvail', { v: info.version })),
+          h('div', { class: 'data-actions' },
+            h('a', { class: 'btn btn--primary', href: info.zip || info.page, target: '_blank', rel: 'noopener' }, icon('download', { size: 15 }), t('set.updateDownload')),
+            h('a', { class: 'btn btn--ghost', href: info.page, target: '_blank', rel: 'noopener' }, t('set.updateNotes'))),
+          h('span', { class: 'stat-line' }, t('set.updateHow')));
+      } else {
+        status.replaceChildren(checked ? h('span', { class: 'stat-line' }, t('set.updateUpToDate')) : '');
+      }
+    };
+    if (s.updateCheck) checkForUpdate(s).then((info) => show(info, false));
+    const now = h('button', { class: 'btn', type: 'button', onclick: () => checkForUpdate(store.get().settings, { force: true }).then((info) => show(info, true)) }, t('set.updateCheckNow'));
+    return h('section', { class: 'setgroup' },
+      h('h3', null, t('set.updates')),
+      tog(s, 'updateCheck', 'set.updateCheck', 'set.updateCheckHint'),
+      s.updateCheck ? h('div', { class: 'data-actions' }, now) : null,
+      status);
+  };
+
   const dataTab = () => {
     const st = store.stats();
     return [
+      updatesGroup(store.get().settings),
       h('section', { class: 'setgroup' },
         h('h3', null, t('set.addSites')),
         h('p', { class: 'stat-line' }, t('set.smartHint')),

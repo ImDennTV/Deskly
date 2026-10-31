@@ -118,3 +118,10 @@ html[data-fx="off"] .brand::after { display: none; }
 .settings .setrow { flex-wrap: wrap; }
 .settings .seg { max-width: 100%; }
 .empty__actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+
+/* ---------- Aggiornamenti ---------- */
+.ibtn--dot { position: relative; }
+.ibtn--dot::after { content: ""; position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--surface); }
+.upd { display: grid; gap: 10px; }
+.upd:empty { display: none; }
+.upd__title { font-weight: 600; color: var(--accent); }

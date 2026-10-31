@@ -306,6 +306,15 @@ const it = {
   'set.historyHintsHint': 'Mentre aggiungi un link ti propone i siti già visitati',
   'set.addSites': 'Aggiungi siti',
   'set.smartHint': 'Deskly guarda i siti più visitati e te li propone già divisi in cartelle. Tutto resta sul tuo computer.',
+  'set.updates': 'Aggiornamenti',
+  'set.updateCheck': 'Controlla gli aggiornamenti',
+  'set.updateCheckHint': 'Una volta al giorno legge l’ultima versione su GitHub. Non invia nulla. Si ferma da solo se Deskly arriva dal Chrome Web Store.',
+  'set.updateAvail': 'Nuova versione disponibile: {v}',
+  'set.updateDownload': 'Scarica',
+  'set.updateNotes': 'Novità',
+  'set.updateHow': 'Estrai lo zip nella cartella di Deskly, poi in chrome://extensions premi «Ricarica».',
+  'set.updateCheckNow': 'Controlla ora',
+  'set.updateUpToDate': 'Sei aggiornato.',
   'set.footerHint': 'La barra in fondo alla nuova scheda è di Chrome: per nasconderla clic destro su di essa → «Nascondi footer».',
 };
 
@@ -617,6 +626,15 @@ const en = {
   'set.historyHintsHint': 'When you add a link it suggests sites you already visited',
   'set.addSites': 'Add sites',
   'set.smartHint': 'Deskly looks at your most visited sites and suggests them already sorted into folders. Everything stays on your computer.',
+  'set.updates': 'Updates',
+  'set.updateCheck': 'Check for updates',
+  'set.updateCheckHint': 'Once a day it reads the latest version on GitHub. Nothing is sent. It stops by itself if Deskly comes from the Chrome Web Store.',
+  'set.updateAvail': 'New version available: {v}',
+  'set.updateDownload': 'Download',
+  'set.updateNotes': 'What’s new',
+  'set.updateHow': 'Unzip into the Deskly folder, then press “Reload” in chrome://extensions.',
+  'set.updateCheckNow': 'Check now',
+  'set.updateUpToDate': 'You are up to date.',
   'set.footerHint': 'The bar at the bottom of the new tab belongs to Chrome: to hide it, right-click it → “Hide footer”.',
 };
 

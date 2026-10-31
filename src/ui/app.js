@@ -11,6 +11,7 @@ import { createSearch } from './search.js';
 import { initDnd } from './dnd.js';
 import { openLinkEditor, openFolderEditor } from './editor.js';
 import { openSettings } from './settings.js';
+import { checkForUpdate } from '../core/updates.js';
 import { importBookmarks, openSmartImport, addSitesByCategory } from './importer.js';
 import { frequentSites } from '../core/suggest.js';
 import { categoryName, bareHost } from '../core/catalog.js';
@@ -238,6 +239,7 @@ function buildShell() {
   });
 
   const settingsBtn = h('button', { class: 'ibtn', type: 'button', title: t('palette.cmd.settings'), 'aria-label': t('palette.cmd.settings'), onclick: openSettings }, icon('settings', { size: 18 }));
+  checkForUpdate(store.get().settings).then((info) => { if (info) settingsBtn.classList.add('ibtn--dot'); });
   const main = h('main', { class: 'main' });
   const heroTitle = h('h1');
   const heroSub = h('p', { class: 'sub' });

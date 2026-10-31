@@ -42,6 +42,7 @@ export const DEFAULT_SETTINGS = {
   searchEngine: 'chrome',
   webSuggest: true,
   historyHints: true,
+  updateCheck: true,
 };
 
 const ENUMS = {
@@ -60,7 +61,7 @@ const ENUMS = {
   bgDim: ['none', 'soft', 'strong'],
   searchEngine: ['chrome', 'google', 'duckduckgo', 'bing', 'brave', 'youtube'],
 };
-const BOOLS = ['bgBlur', 'grain', 'effects', 'showBrand', 'showClock', 'showDate', 'clock24', 'showSeconds', 'showGreeting', 'showSummary', 'showFavorites', 'showRecents', 'showSuggestions', 'groupOnOpen', 'focusExisting', 'favicons', 'webSuggest', 'historyHints'];
+const BOOLS = ['bgBlur', 'grain', 'effects', 'showBrand', 'showClock', 'showDate', 'clock24', 'showSeconds', 'showGreeting', 'showSummary', 'showFavorites', 'showRecents', 'showSuggestions', 'groupOnOpen', 'focusExisting', 'favicons', 'webSuggest', 'historyHints', 'updateCheck'];
 
 const LIMITS = { folders: 500, links: 20000 };
 

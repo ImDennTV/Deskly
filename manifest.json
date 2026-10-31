@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "__MSG_extName__",
   "short_name": "Deskly",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "__MSG_extDescription__",
   "default_locale": "en",
   "minimum_chrome_version": "114",
@@ -24,7 +24,7 @@
   "chrome_url_overrides": { "newtab": "newtab.html" },
   "omnibox": { "keyword": "dk" },
   "permissions": ["storage", "tabs", "tabGroups", "sidePanel", "contextMenus", "favicon", "history", "topSites", "search"],
-  "host_permissions": ["https://suggestqueries.google.com/*"],
+  "host_permissions": ["https://suggestqueries.google.com/*", "https://api.github.com/*"],
   "optional_permissions": ["bookmarks"],
   "commands": {
     "open-panel": {

@@ -1,4 +1,4 @@
-﻿# Deskly — Cartelle di siti e link
+# Deskly — Cartelle di siti e link
 
 Estensione Chrome (Manifest V3) per organizzare siti e link in cartelle con nome, icona e colore.
 Risolve due limiti di Chrome: i 10 collegamenti della nuova scheda e i gruppi di schede che spariscono quando si chiudono.
@@ -47,7 +47,7 @@ Il piede di pagina di Chrome («Personalizza Chrome») non si può togliere da u
 ## Backup e condivisione
 
 - **Esporta / Importa** (Impostazioni → Dati): un file JSON con tutte le cartelle. È il modo più semplice per mandare la tua configurazione a un collega, che la importa dopo aver installato Deskly.
-- I dati restano sul tuo computer in `chrome.storage.local`. L'unica richiesta in rete è quella dei suggerimenti web di Google mentre scrivi nella barra (si spegne in Impostazioni → Comportamento): viene inviato solo il testo digitato.
+- I dati restano sul tuo computer in `chrome.storage.local`. Le uniche richieste in rete sono due, entrambe spegnibili: i suggerimenti web di Google mentre scrivi nella barra (Impostazioni → Comportamento; viene inviato solo il testo digitato) e il controllo degli aggiornamenti su GitHub (Impostazioni → Dati → Aggiornamenti; non viene inviato nulla).
 
 ## Permessi
 
@@ -60,11 +60,20 @@ Il piede di pagina di Chrome («Personalizza Chrome») non si può togliere da u
 | `favicon` | mostrare l'icona di ogni sito (letta localmente da Chrome) |
 | `history`, `topSites` | cercare nella cronologia e proporti i siti più visitati (restano in locale) |
 | `search` | cercare con il motore predefinito di Chrome |
+| host `suggestqueries.google.com` | suggerimenti web mentre scrivi |
+| host `api.github.com` | sapere se esiste una versione più recente (solo lettura, nessun dato inviato) |
 | `bookmarks` (opzionale) | solo se importi i preferiti; viene chiesto in quel momento |
 
 ## Distribuzione ristretta
 
-- **Ora**: manda lo zip alle persone di fiducia, che seguono i passi sopra. Ogni aggiornamento è un nuovo zip: sostituiscono la cartella e premono «Ricarica» in `chrome://extensions`.
+- **Ora**: le versioni sono nelle [Releases](https://github.com/ImDennTV/Deskly/releases) di GitHub. Deskly controlla da solo se ce n'è una nuova (un puntino sull'ingranaggio e un avviso in Impostazioni → Dati) e propone il download.
+- **Aggiornare su Windows con un comando**: scarica l'ultima release, aggiorna la cartella e apre `chrome://extensions`; resta solo «Ricarica» (Chrome non permette installazioni silenziose fuori dal Web Store).
+
+  ```powershell
+  irm https://raw.githubusercontent.com/ImDennTV/Deskly/main/install.ps1 | iex
+  ```
+
+  La cartella è `D:\Deskly\deskly` se esiste, altrimenti `%LOCALAPPDATA%\Deskly\extension`; si può scegliere con `-Path`.
 - **Più avanti**: Chrome Web Store con visibilità **Privata** (solo account Google indicati) o **Non in elenco** (solo chi ha il link). Così si installa con un clic e si aggiorna da solo.
 
 ## Sviluppo
@@ -82,4 +91,3 @@ In anteprima web le icone dei siti arrivano da un servizio esterno; nell'estensi
 ## Licenza
 
 [MIT](LICENSE).
-
