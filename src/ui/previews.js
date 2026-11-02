@@ -48,6 +48,10 @@ const BUILD = {
     used: () => pv('pv--sort', [100, 70, 44].map((w) => h('b', { style: { width: `${w}%` } }))),
     recent: () => pv('pv--sort', [100, 72, 46].map((w, i) => h('b', { style: { width: '88%', opacity: String(1 - i * 0.32) } }))),
   },
+  flow: {
+    grid: () => pv('pv--flow pv--flowgrid', rep(2, () => h('div', null, h('i', { style: { height: '14px' } }), h('i', { style: { height: '14px' } })))),
+    masonry: () => pv('pv--flow', [[10, 18], [22, 8]].map((hs) => h('div', null, hs.map((n) => h('i', { style: { height: `${n}px` } }))))),
+  },
   fold: {
     few: () => pv('pv--icons', rep(5, () => h('i'))),
     normal: () => pv('pv--icons', rep(10, () => h('i'))),

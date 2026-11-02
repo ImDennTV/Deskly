@@ -53,6 +53,8 @@
 /* Pannelli di vetro: uno per cartella, centrati; tanti = si dispongono a mosaico. */
 [data-mode="newtab"] .folders { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, calc(var(--tile) * 3.8)), calc(var(--tile) * 5.8))); justify-content: center; gap: clamp(16px, 1.6vw, 28px); align-items: start; }
 [data-mode="newtab"][data-stack] .folders { grid-template-columns: minmax(0, 760px); }
+/* Mosaico: righe di 1px, ogni cartella occupa tante righe quanto è alta (le imposta arrange.js) e sale a riempire il vuoto. */
+[data-mode="newtab"] .folders--masonry { grid-auto-rows: 1px; row-gap: 0; }
 [data-mode="newtab"] .folder {
   background: linear-gradient(180deg, color-mix(in srgb, var(--fc) 7%, var(--surface)), var(--surface) 140px);
   border: 1px solid var(--line); border-radius: var(--r-xl); padding: clamp(14px, 1.2vw, 22px);
@@ -210,6 +212,10 @@ html[data-ishape="circle"] .link--tile .ltile__ico .fav[data-tone="full"]:not([d
 .pv--cols i { width: 100%; height: 100%; border-radius: 3px; background: var(--pv-soft); border: 1px solid var(--pv-soft); }
 .pv--cols i::after { content: ""; display: block; margin: 4px; height: 3px; border-radius: 2px; background: var(--pv-ink); }
 /* ordinamento */
+.pv--flow { grid-auto-flow: column; grid-template-columns: 1fr 1fr; gap: 4px; align-content: center; align-items: start; justify-items: stretch; }
+.pv--flow > div { display: grid; gap: 4px; }
+.pv--flow i { width: 100%; border: 1px solid var(--pv-soft); }
+.pv--flowgrid { align-items: center; }
 .pv--sort { align-content: center; justify-items: stretch; gap: 4px; padding: 6px 9px; }
 .pv--sort b { height: 5px; background: var(--accent); border-radius: 3px; }
 .pv--text { font: 700 11px/1.1 var(--font); letter-spacing: 0.02em; color: var(--text-2); align-content: center; }

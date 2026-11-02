@@ -92,6 +92,7 @@ export function applyTheme(settings) {
   root.style.setProperty('--accent', settings.accent);
   root.style.setProperty('--accent-ink', ink);
   d.cols = settings.folderCols;
+  d.flow = settings.folderFlow;
   d.ishape = settings.iconShape;
   document.body.dataset.layout = settings.newtabLayout;
   // Cartelle in una sola colonna: servono sia al CSS sia al trascinamento (marcatori verticali).

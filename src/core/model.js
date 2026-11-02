@@ -21,6 +21,7 @@ export const DEFAULT_SETTINGS = {
   // disposizione e ordine
   folderCols: 'auto',
   folderSort: 'manual',
+  folderFlow: 'grid',
   linkSort: 'manual',
   favFirst: false,
   foldAt: 'normal',
@@ -73,7 +74,8 @@ const ENUMS = {
   newtabLayout: ['grid', 'list', 'compact', 'icons'],
   iconShape: ['rounded', 'circle', 'square'],
   folderCols: ['auto', '1', '2', '3', '4'],
-  folderSort: ['manual', 'name', 'size', 'used'],
+  folderSort: ['manual', 'name', 'size', 'used', 'recent'],
+  folderFlow: ['grid', 'masonry'],
   linkSort: ['manual', 'name', 'used', 'recent'],
   foldAt: ['few', 'normal', 'all'],
   bgStyle: ['aurora', 'plain', 'gradient', 'image'],
@@ -161,6 +163,7 @@ export function sanitizeFolder(f, index = 0) {
     links: [],
   };
   if (f.collapsed) folder.collapsed = true;
+  if (f.wide) folder.wide = true;
   for (const l of Array.isArray(f.links) ? f.links : []) {
     const link = sanitizeLink(l);
     if (link) folder.links.push(link);

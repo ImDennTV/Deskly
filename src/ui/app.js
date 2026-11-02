@@ -10,6 +10,7 @@ import { logo, toast, menu } from './kit.js';
 import { folderCard, chip, emptyState } from './folders.js';
 import { createSearch } from './search.js';
 import { initDnd } from './dnd.js';
+import { arrangeFolders } from './arrange.js';
 import { openLinkEditor, openFolderEditor } from './editor.js';
 import { openSettings } from './settings.js';
 import { checkForUpdate } from '../core/updates.js';
@@ -77,10 +78,12 @@ function viewFolders(doc) {
   });
   if (s.folderSort === 'manual') return folders;
   const uses = (f) => f.links.reduce((n, l) => n + (doc.stats[l.id]?.n || 0), 0);
+  const last = (f) => f.links.reduce((n, l) => Math.max(n, doc.stats[l.id]?.last || 0), 0);
   const by = {
     name: (a, b) => collate(a.name, b.name),
     size: (a, b) => b.links.length - a.links.length || collate(a.name, b.name),
     used: (a, b) => uses(b) - uses(a) || collate(a.name, b.name),
+    recent: (a, b) => last(b) - last(a) || collate(a.name, b.name),
   }[s.folderSort];
   return folders.sort(by);
 }
@@ -206,12 +209,27 @@ function linkMenu(link, folder, anchor) {
 }
 
 function folderMenu(folder, anchor) {
+  const doc = store.get();
+  const index = doc.folders.findIndex((f) => f.id === folder.id);
+  const wide = Boolean(doc.folders[index]?.wide);
+  const manual = doc.settings.folderSort === 'manual';
+  const place = [];
+  if (manual && doc.folders.length > 1) {
+    place.push(
+      { label: t('folder.moveFirst'), icon: 'arrow-up', disabled: index <= 0, onClick: () => store.moveFolder(folder.id, 0) },
+      { label: t('folder.moveBack'), icon: 'chevron-up', disabled: index <= 0, onClick: () => store.moveFolder(folder.id, index - 1) },
+      { label: t('folder.moveFwd'), icon: 'chevron-down', disabled: index >= doc.folders.length - 1, onClick: () => store.moveFolder(folder.id, index + 1) },
+      { label: t('folder.moveLast'), icon: 'arrow-down', disabled: index >= doc.folders.length - 1, onClick: () => store.moveFolder(folder.id, doc.folders.length - 1) },
+    );
+  }
+  if (mode === 'newtab') place.push({ label: wide ? t('folder.narrow') : t('folder.wide'), icon: wide ? 'rows-3' : 'layout-list', onClick: () => store.setWide(folder.id, !wide) });
   menu(anchor, [
     { label: t('folder.openGroup'), icon: 'layers', disabled: !folder.links.length, onClick: () => ctx.openFolder(folder) },
     { label: t('folder.addLink'), icon: 'plus', onClick: () => newLink({}, folder.id) },
     { sep: true },
     { label: t('common.edit'), icon: 'pencil', onClick: () => openFolderEditor({ folder }) },
     { label: folder.collapsed ? t('folder.expand') : t('folder.collapse'), icon: folder.collapsed ? 'chevron-down' : 'chevron-up', onClick: () => store.setCollapsed(folder.id, !folder.collapsed) },
+    ...(place.length ? [{ sep: true }, ...place] : []),
     { sep: true },
     { label: t('folder.delete'), icon: 'trash-2', danger: true, onClick: () => deleteFolder(folder) },
   ]);
@@ -389,6 +407,7 @@ function render() {
     }
   }
   mount(shell.main, out);
+  arrangeFolders(mode === 'newtab' ? shell.main.querySelector('.folders') : null);
 }
 
 // ---------- suggeriti per te ----------

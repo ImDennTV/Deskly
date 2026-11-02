@@ -137,6 +137,15 @@ export function setCollapsed(id, collapsed) {
   }, { undo: false });
 }
 
+export function setWide(id, wide) {
+  commit('folder.wide', (d) => {
+    const f = findFolder(d, id);
+    if (!f) return;
+    if (wide) f.wide = true;
+    else delete f.wide;
+  }, { undo: false });
+}
+
 // Link
 
 export function addLink(folderId, data, index) {

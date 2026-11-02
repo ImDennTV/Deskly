@@ -233,7 +233,7 @@ export function folderCard(folder, ctx) {
     {
       class: `folder${collapsed ? ' is-collapsed' : ''}`,
       style: { '--fc': folder.color },
-      dataset: { folderId: folder.id },
+      dataset: folder.wide ? { folderId: folder.id, wide: '1' } : { folderId: folder.id },
       oncontextmenu: (e) => {
         if (e.target.closest('.link')) return;
         e.preventDefault();
